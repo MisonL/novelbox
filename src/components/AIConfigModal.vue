@@ -345,19 +345,29 @@ onMounted(async () => {
   }
 })
 
+/**
+ * 加载AI配置
+ * 从配置服务中加载全局配置、自定义服务商列表、当前服务商配置和提示词配置
+ * 如果加载失败，使用默认配置并显示错误提示
+ */
 const loadAIConfig = async () => {
   try {
     // 加载全局配置（包含当前选择的服务商和自定义服务商列表）
     const globalConfig = await AIConfigService.loadProviderConfig('global')
     
+    // 验证全局配置
+    if (!globalConfig || typeof globalConfig !== 'object') {
+      throw new Error('全局配置格式无效');
+    }
+    
     // 加载自定义服务商列表
-    if (globalConfig.customProviders) {
-      aiConfig.customProviders = globalConfig.customProviders
+    if (globalConfig.customProviders && Array.isArray(globalConfig.customProviders)) {
+      aiConfig.customProviders = globalConfig.customProviders;
     }
     
     // 设置当前选择的服务商
-    if (globalConfig.provider) {
-      aiConfig.provider = globalConfig.provider
+    if (globalConfig.provider && typeof globalConfig.provider === 'string') {
+      aiConfig.provider = globalConfig.provider;
     }
     
     // 更新模型选项
@@ -371,13 +381,37 @@ const loadAIConfig = async () => {
     Object.assign(tempPromptConfig, promptConfig)
   } catch (error) {
     console.error('加载AI配置失败:', error)
+    ElMessage.error('加载AI配置失败: ' + (error.message || '未知错误'))
+    
+    // 使用默认配置
+    aiConfig.provider = 'openai'
+    aiConfig.customProviders = []
+    await updateModelOptions()
   }
 }
 
-// 加载当前选择的服务商配置
+/**
+ * 加载当前选择的服务商配置
+ * 根据当前选择的服务商ID加载对应的配置信息
+ * 包括模型、API密钥、代理URL以及模型特定的参数（temperature、maxTokens、topP）
+ * 参数优先级：模型特定配置 > 模型默认值 > 全局默认值
+ * 如果加载失败，使用默认值并显示错误提示
+ */
 const loadCurrentProviderConfig = async () => {
   try {
+    // 验证当前服务商
+    if (!aiConfig.provider || typeof aiConfig.provider !== 'string') {
+      throw new Error('当前服务商配置无效');
+    }
+    
     const providerConfig = await AIConfigService.loadProviderConfig(aiConfig.provider)
+    
+    // 验证配置格式
+    if (!providerConfig || typeof providerConfig !== 'object') {
+      throw new Error('服务商配置格式无效');
+    }
+    
+    // 设置基本配置
     aiConfig.model = providerConfig.model || ''
     aiConfig.apiKey = providerConfig.apiKey || ''
     aiConfig.proxyUrl = providerConfig.proxyUrl || ''
@@ -424,18 +458,57 @@ const loadCurrentProviderConfig = async () => {
     }
   } catch (error) {
     console.error('加载服务商配置失败:', error)
+    ElMessage.error('加载服务商配置失败: ' + (error.message || '未知错误'))
+    
+    // 使用默认值
+    aiConfig.temperature = 0.7
+    aiConfig.maxTokens = 2000
+    aiConfig.topP = 0.95
   }
 }
 
+/**
+ * 保存AI配置
+ * 验证用户输入的配置参数，包括服务商、模型、API密钥和数值范围
+ * 保存当前服务商的配置和全局配置（当前选择的服务商和自定义服务商列表）
+ * 如果验证失败或保存出错，显示相应的错误提示
+ */
 const saveAIConfig = async () => {
-  const isCustomProvider = aiConfig.customProviders?.some(p => p.name === aiConfig.provider);
-  
-  if (!isCustomProvider && !aiConfig.apiKey.trim()) {
-    ElMessage.error('请输入API密钥')
-    return
-  }
-
   try {
+    // 验证输入
+    if (!aiConfig.provider || typeof aiConfig.provider !== 'string') {
+      ElMessage.error('请选择有效的AI服务商');
+      return;
+    }
+    
+    const isCustomProvider = aiConfig.customProviders?.some(p => p.name === aiConfig.provider);
+    
+    if (!isCustomProvider && !aiConfig.apiKey?.trim()) {
+      ElMessage.error('请输入API密钥');
+      return;
+    }
+    
+    if (!aiConfig.model || typeof aiConfig.model !== 'string') {
+      ElMessage.error('请选择有效的AI模型');
+      return;
+    }
+    
+    // 验证数值范围
+    if (typeof aiConfig.temperature !== 'number' || aiConfig.temperature < 0 || aiConfig.temperature > 2) {
+      ElMessage.error('Temperature值必须在0-2之间');
+      return;
+    }
+    
+    if (typeof aiConfig.maxTokens !== 'number' || aiConfig.maxTokens < 1 || aiConfig.maxTokens > 4096) {
+      ElMessage.error('最大Token数必须在1-4096之间');
+      return;
+    }
+    
+    if (typeof aiConfig.topP !== 'number' || aiConfig.topP < 0 || aiConfig.topP > 1) {
+      ElMessage.error('Top P值必须在0-1之间');
+      return;
+    }
+
     // 加载当前配置
     const currentConfig = await AIConfigService.loadProviderConfig(aiConfig.provider)
     
@@ -477,7 +550,7 @@ const saveAIConfig = async () => {
     ElMessage.success('AI配置已保存')
   } catch (error) {
     console.error('保存AI配置失败:', error)
-    ElMessage.error(error.message || '保存AI配置失败')
+    ElMessage.error('保存AI配置失败: ' + (error.message || '未知错误'))
   }
 }
 
@@ -648,66 +721,113 @@ const closeCustomProviderModal = () => {
   isEditingCustomProvider.value = false
 }
 
+/**
+ * 删除自定义服务商
+ * 从自定义服务商列表中删除当前选中的服务商
+ * 删除对应的配置文件
+ * 切换到默认服务商（openai）
+ * 如果删除失败，显示错误提示
+ */
 const deleteCustomProvider = async () => {
   try {
+    // 验证当前选择的服务商
+    if (!aiConfig.provider || typeof aiConfig.provider !== 'string') {
+      ElMessage.error('当前选择的服务商无效');
+      return;
+    }
+    
     // 从自定义服务商列表中删除
     const index = aiConfig.customProviders?.findIndex(p => p.name === aiConfig.provider)
-    if (index !== -1) {
-      const providerName = aiConfig.provider
-      aiConfig.customProviders?.splice(index, 1)
-      
-      // 删除服务商的配置文件
-      await AIConfigService.deleteConfig(providerName)
-      
-      // 删除后切换到默认服务商
-      aiConfig.provider = 'openai'
-      await updateModelOptions()
-      
-      // 保存全局配置
-      const globalConfig = {
-        provider: aiConfig.provider,
-        customProviders: aiConfig.customProviders || []
-      }
-      await AIConfigService.saveGlobalConfig(globalConfig)
-      
-      closeCustomProviderModal()
-      ElMessage.success('自定义服务商已删除')
+    if (index === -1) {
+      ElMessage.error('未找到要删除的自定义服务商');
+      return;
     }
+    
+    const providerName = aiConfig.provider
+    aiConfig.customProviders?.splice(index, 1)
+    
+    // 删除服务商的配置文件
+    await AIConfigService.deleteConfig(providerName)
+    
+    // 删除后切换到默认服务商
+    aiConfig.provider = 'openai'
+    await updateModelOptions()
+    
+    // 保存全局配置
+    const globalConfig = {
+      provider: aiConfig.provider,
+      customProviders: aiConfig.customProviders || []
+    }
+    await AIConfigService.saveGlobalConfig(globalConfig)
+    
+    closeCustomProviderModal()
+    ElMessage.success('自定义服务商已删除')
   } catch (error) {
     console.error('删除自定义服务商失败:', error)
-    ElMessage.error(error.message)
+    ElMessage.error('删除自定义服务商失败: ' + (error.message || '未知错误'))
   }
 }
 
+/**
+ * 保存自定义服务商
+ * 验证用户输入的自定义服务商信息，包括名称、API域名、路径和模型
+ * 验证API域名格式和API路径格式
+ * 检查是否已存在同名服务商
+ * 如果验证失败或保存出错，显示相应的错误提示
+ */
 const saveCustomProvider = async () => {
-  if (!customProvider.name.trim()) {
-    ElMessage.error('请输入服务商名称')
-    return
-  }
-  if (!customProvider.apiDomain.trim()) {
-    ElMessage.error('请输入API域名')
-    return
-  }
-  if (!customProvider.apiPath.trim()) {
-    ElMessage.error('请输入API路径')
-    return
-  }
-  if (!customProvider.model.trim()) {
-    ElMessage.error('请输入模型名称')
-    return
-  }
-  
-  // 创建新的自定义服务商配置
-  const newProvider = {
-    name: customProvider.name.trim(),
-    apiDomain: customProvider.apiDomain.trim(),
-    apiPath: customProvider.apiPath.trim(),
-    model: customProvider.model.trim()
-  }
-
   try {
+    // 验证输入
+    if (!customProvider.name?.trim()) {
+      ElMessage.error('请输入服务商名称');
+      return;
+    }
+    
+    if (!customProvider.apiDomain?.trim()) {
+      ElMessage.error('请输入API域名');
+      return;
+    }
+    
+    if (!customProvider.apiPath?.trim()) {
+      ElMessage.error('请输入API路径');
+      return;
+    }
+    
+    if (!customProvider.model?.trim()) {
+      ElMessage.error('请输入模型名称');
+      return;
+    }
+    
+    // 验证API域名格式
+    try {
+      new URL(`https://${customProvider.apiDomain.trim()}`);
+    } catch {
+      ElMessage.error('API域名格式无效');
+      return;
+    }
+    
+    // 验证API路径格式
+    if (!customProvider.apiPath.trim().startsWith('/')) {
+      ElMessage.error('API路径必须以/开头');
+      return;
+    }
+    
+    // 创建新的自定义服务商配置
+    const newProvider = {
+      name: customProvider.name.trim(),
+      apiDomain: customProvider.apiDomain.trim(),
+      apiPath: customProvider.apiPath.trim(),
+      model: customProvider.model.trim()
+    }
+
     // 获取当前的自定义服务商列表
     const customProviders = await AIConfigService.getCustomProviders()
+    
+    // 检查是否已存在同名服务商
+    if (customProviders.some(p => p.name === newProvider.name)) {
+      ElMessage.error('已存在同名服务商');
+      return;
+    }
     
     // 添加新的自定义服务商
     customProviders.push(newProvider)
@@ -731,8 +851,8 @@ const saveCustomProvider = async () => {
     closeCustomProviderModal()
     ElMessage.success('自定义服务商添加成功')
   } catch (error) {
-    console.error('保存自定义服务商失败:', error.message)
-    ElMessage.error(error.message)
+    console.error('保存自定义服务商失败:', error)
+    ElMessage.error('保存自定义服务商失败: ' + (error.message || '未知错误'))
   }
 }
 
@@ -807,65 +927,97 @@ const resetToDefault = () => {
   })
 }
 
+/**
+ * 插入变量到提示词中
+ * 根据变量类型插入对应的占位符到当前焦点的文本区域
+ * 支持的变量：书名、简介、设定、大纲、章节细纲、章节内容、当前内容、前文
+ * 如果参数无效或找不到文本区域，显示错误提示
+ * @param type - 变量类型
+ * @param event - 鼠标事件对象
+ */
 const insertVariable = (type: string, event: MouseEvent) => {
-  const textarea = lastFocusedTextarea.value || getCurrentTextarea()
-  const cursorPos = textarea.selectionStart
-  const textBefore = textarea.value.substring(0, cursorPos)
-  const textAfter = textarea.value.substring(textarea.selectionEnd)
-  let variable = '${content}'
-  switch (type) {
-    case 'title':
-      variable = '${title}'
-      break
-    case 'desc':
-      variable = '${description}'
-      break
-    case 'settings':
-      variable = '${settings}'
-      break
-    case 'outline':
-      variable = '${outline}'
-      break
-    case 'chapterOutline':
-      variable = '${chapterOutline}'
-      break
-    case 'chapter':
-      variable = '${chapter}'
-      break
-    case 'content':
-      variable = '${content}'
-      break
-    case 'previous':
-      variable = '${previous}'
-      break
-  }
-  // 根据当前文本区域更新对应的tempPromptConfig属性
-  const newValue = textBefore + variable + textAfter
-  if (textarea === bookNameDescTextarea.value) {
-    tempPromptConfig.bookNameAndDesc = newValue
-  } else if (textarea === settingsTextarea.value) {
-    tempPromptConfig.settings = newValue
-  } else if (textarea === outlineTextarea.value) {
-    tempPromptConfig.outline = newValue
-  } else if (textarea === chapterOutlineTextarea.value) {
-    tempPromptConfig.chapterOutline = newValue
-  } else if (textarea === chapterTextarea.value) {
-    tempPromptConfig.chapter = newValue
-  } else if (textarea === firstChapterTextarea.value) {
-    tempPromptConfig.firstChapter = newValue
-  } else if (textarea === continueTextarea.value) {
-    tempPromptConfig.continue = newValue
-  } else if (textarea === expandTextarea.value) {
-    tempPromptConfig.expand = newValue
-  } else if (textarea === abbreviateTextarea.value) {
-    tempPromptConfig.abbreviate = newValue
-  }
+  try {
+    // 验证参数
+    if (!type || typeof type !== 'string') {
+      console.warn('变量类型无效:', type);
+      return;
+    }
+    
+    const textarea = lastFocusedTextarea.value || getCurrentTextarea()
+    if (!textarea) {
+      console.warn('未找到可用的文本区域');
+      ElMessage.error('请先点击一个文本区域');
+      return;
+    }
+    
+    const cursorPos = textarea.selectionStart
+    const textBefore = textarea.value.substring(0, cursorPos)
+    const textAfter = textarea.value.substring(textarea.selectionEnd)
+    
+    // 根据类型确定变量
+    let variable = '${content}'
+    switch (type) {
+      case 'title':
+        variable = '${title}'
+        break
+      case 'desc':
+        variable = '${description}'
+        break
+      case 'settings':
+        variable = '${settings}'
+        break
+      case 'outline':
+        variable = '${outline}'
+        break
+      case 'chapterOutline':
+        variable = '${chapterOutline}'
+        break
+      case 'chapter':
+        variable = '${chapter}'
+        break
+      case 'content':
+        variable = '${content}'
+        break
+      case 'previous':
+        variable = '${previous}'
+        break
+      default:
+        console.warn('未知的变量类型:', type);
+        ElMessage.warning('未知的变量类型');
+        return;
+    }
+    
+    // 根据当前文本区域更新对应的tempPromptConfig属性
+    const newValue = textBefore + variable + textAfter
+    if (textarea === bookNameDescTextarea.value) {
+      tempPromptConfig.bookNameAndDesc = newValue
+    } else if (textarea === settingsTextarea.value) {
+      tempPromptConfig.settings = newValue
+    } else if (textarea === outlineTextarea.value) {
+      tempPromptConfig.outline = newValue
+    } else if (textarea === chapterOutlineTextarea.value) {
+      tempPromptConfig.chapterOutline = newValue
+    } else if (textarea === chapterTextarea.value) {
+      tempPromptConfig.chapter = newValue
+    } else if (textarea === firstChapterTextarea.value) {
+      tempPromptConfig.firstChapter = newValue
+    } else if (textarea === continueTextarea.value) {
+      tempPromptConfig.continue = newValue
+    } else if (textarea === expandTextarea.value) {
+      tempPromptConfig.expand = newValue
+    } else if (textarea === abbreviateTextarea.value) {
+      tempPromptConfig.abbreviate = newValue
+    }
 
-  // 更新文本区域的值和光标位置
-  textarea.value = newValue
-  textarea.focus()
-  textarea.selectionStart = cursorPos + variable.length
-  textarea.selectionEnd = cursorPos + variable.length
+    // 更新文本区域的值和光标位置
+    textarea.value = newValue
+    textarea.focus()
+    textarea.selectionStart = cursorPos + variable.length
+    textarea.selectionEnd = cursorPos + variable.length
+  } catch (error) {
+    console.error('插入变量失败:', error);
+    ElMessage.error('插入变量时发生错误');
+  }
 }
 
 const getCurrentTextarea = (): HTMLTextAreaElement | undefined => {

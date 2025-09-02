@@ -5,9 +5,10 @@
     "module": "CommonJS",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "outDir": "./electron/dist",
+    "outDir": "../electron/dist",
     "noEmit": false, // 或 "emitDeclarationOnly": true
-    "allowImportingTsExtensions": false
+    "allowImportingTsExtensions": false,
+    "rootDir": "../"
   },
-  "include": ["electron/**/*.ts"]
+  "include": ["../electron/**/*.ts"]
 }

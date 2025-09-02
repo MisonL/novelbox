@@ -93,111 +93,305 @@ const handleToggle = (tab: 'chapters' | 'fragments') => {
   emit('switch-tab', tab)
 }
 
-// 添加新卷
+/**
+ * 添加新卷
+ * 在章节列表中添加一个新的卷节点
+ * 验证章节列表的有效性，创建新卷对象并更新列表
+ * 添加后自动进入编辑状态，聚焦到标题输入框
+ * 如果添加失败，显示错误提示
+ */
 const addVolume = () => {
-  const newVolume: Chapter = {
-    id: uuidv4(),
-    title: '新卷',
-    type: 'volume',
-    children: [],
-    detailOutline: {
-      chapterNumber: '',
-      detailContent: ''
+  try {
+    // 验证输入
+    if (!props.chapters || !Array.isArray(props.chapters)) {
+      console.error('章节列表无效');
+      ElMessage.error('章节列表无效');
+      return;
     }
+    
+    const newVolume: Chapter = {
+      id: uuidv4(),
+      title: '新卷',
+      type: 'volume',
+      children: [],
+      detailOutline: {
+        chapterNumber: '',
+        detailContent: ''
+      }
+    }
+    
+    const updatedChapters = [...props.chapters, newVolume]
+    emit('update:chapters', updatedChapters)
+    editingNodeId.value = newVolume.id
+    
+    nextTick(() => {
+      if (editInput.value) {
+        editInput.value.focus()
+      }
+    })
+  } catch (error) {
+    console.error('添加新卷失败:', error);
+    ElMessage.error('添加新卷失败');
   }
-  const updatedChapters = [...props.chapters, newVolume]
-  emit('update:chapters', updatedChapters)
-  editingNodeId.value = newVolume.id
-  nextTick(() => {
-    if (editInput.value) {
-      editInput.value.focus()
-    }
-  })
 }
 
-// 添加新章节
+/**
+ * 添加新章节
+ * 在指定卷中添加一个新的章节节点
+ * 验证卷参数的有效性，确保只能向卷中添加章节
+ * 创建新章节对象并更新列表
+ * 添加后自动进入编辑状态，聚焦到标题输入框
+ * 如果添加失败，显示错误提示
+ * @param volume - 要添加章节的卷对象
+ */
 const addChapter = (volume: Chapter) => {
-  if (!volume.children) {
-    volume.children = []
-  }
-  const newChapter: Chapter = {
-    id: uuidv4(),
-    title: '新章节',
-    type: 'chapter',
-    content: '',
-    detailOutline: {
-      chapterNumber: '',
-      detailContent: ''
+  try {
+    // 验证卷参数
+    if (!volume || typeof volume !== 'object') {
+      console.error('卷参数无效');
+      ElMessage.error('卷参数无效');
+      return;
     }
-  }
-  volume.children.push(newChapter)
-  emit('update:chapters', [...props.chapters])
-  editingNodeId.value = newChapter.id
-  nextTick(() => {
-    if (editInput.value) {
-      editInput.value.focus()
+    
+    if (volume.type !== 'volume') {
+      console.error('只能向卷中添加章节');
+      ElMessage.error('只能向卷中添加章节');
+      return;
     }
-  })
+    
+    // 确保children数组存在
+    if (!volume.children) {
+      volume.children = []
+    }
+    
+    const newChapter: Chapter = {
+      id: uuidv4(),
+      title: '新章节',
+      type: 'chapter',
+      content: '',
+      detailOutline: {
+        chapterNumber: '',
+        detailContent: ''
+      }
+    }
+    
+    volume.children.push(newChapter)
+    emit('update:chapters', [...props.chapters])
+    editingNodeId.value = newChapter.id
+    
+    nextTick(() => {
+      if (editInput.value) {
+        editInput.value.focus()
+      }
+    })
+  } catch (error) {
+    console.error('添加新章节失败:', error);
+    ElMessage.error('添加新章节失败');
+  }
 }
 
-// 开始编辑节点
+/**
+ * 开始编辑节点
+ * 将指定节点设置为编辑状态，显示标题输入框
+ * 验证节点数据的有效性，确保节点ID存在
+ * 设置编辑状态后，聚焦到标题输入框
+ * 如果开始编辑失败，显示错误提示
+ * @param data - 要编辑的节点数据
+ */
 const startEdit = (data: Chapter) => {
-  editingNodeId.value = data.id
-  nextTick(() => {
-    if (editInput.value) {
-      editInput.value.focus()
+  try {
+    // 验证数据
+    if (!data || typeof data !== 'object') {
+      console.error('节点数据无效');
+      ElMessage.error('节点数据无效');
+      return;
     }
-  })
-}
-
-// 完成编辑
-const finishEdit = (data: Chapter) => {
-  if (!data.title.trim()) {
-    ElMessage.warning('标题不能为空')
-    data.title = data.type === 'volume' ? '新卷' : '新章节'
+    
+    if (!data.id || typeof data.id !== 'string') {
+      console.error('节点ID无效');
+      ElMessage.error('节点ID无效');
+      return;
+    }
+    
+    editingNodeId.value = data.id
+    
+    nextTick(() => {
+      if (editInput.value) {
+        editInput.value.focus()
+      }
+    })
+  } catch (error) {
+    console.error('开始编辑节点失败:', error);
+    ElMessage.error('开始编辑节点失败');
   }
-  editingNodeId.value = null
-  emit('update:chapters', [...props.chapters])
 }
 
-// 删除节点
+/**
+ * 完成编辑
+ * 退出编辑状态，保存节点标题
+ * 验证节点数据和标题的有效性
+ * 如果标题为空，使用默认标题并显示警告
+ * 更新章节列表，触发重新渲染
+ * 如果完成编辑失败，显示错误提示
+ * @param data - 编辑完成的节点数据
+ */
+const finishEdit = (data: Chapter) => {
+  try {
+    // 验证数据
+    if (!data || typeof data !== 'object') {
+      console.error('节点数据无效');
+      ElMessage.error('节点数据无效');
+      return;
+    }
+    
+    if (!data.title || typeof data.title !== 'string') {
+      console.error('节点标题无效');
+      ElMessage.error('节点标题无效');
+      return;
+    }
+    
+    if (!data.title.trim()) {
+      ElMessage.warning('标题不能为空');
+      data.title = data.type === 'volume' ? '新卷' : '新章节';
+    }
+    
+    editingNodeId.value = null;
+    emit('update:chapters', [...props.chapters]);
+  } catch (error) {
+    console.error('完成编辑失败:', error);
+    ElMessage.error('完成编辑失败');
+  }
+}
+
+/**
+ * 删除节点
+ * 从章节树中删除指定的节点
+ * 支持删除根节点（卷）和子节点（章节）
+ * 验证节点参数的有效性，确保节点ID存在
+ * 根据节点层级执行不同的删除逻辑
+ * 如果删除失败，显示错误提示
+ * @param node - 要删除的节点信息
+ * @param data - 要删除的节点数据
+ */
 const removeNode = (node: any, data: Chapter) => {
-  if (node.level === 1) {
-    // 删除根节点(卷)
-    const index = props.chapters.findIndex(item => item.id === data.id)
-    if (index > -1) {
+  try {
+    // 验证参数
+    if (!node || typeof node !== 'object') {
+      console.error('节点参数无效');
+      ElMessage.error('节点参数无效');
+      return;
+    }
+    
+    if (!data || typeof data !== 'object') {
+      console.error('节点数据无效');
+      ElMessage.error('节点数据无效');
+      return;
+    }
+    
+    if (!data.id || typeof data.id !== 'string') {
+      console.error('节点ID无效');
+      ElMessage.error('节点ID无效');
+      return;
+    }
+    
+    if (node.level === 1) {
+      // 删除根节点(卷)
+      const index = props.chapters.findIndex(item => item.id === data.id)
+      if (index === -1) {
+        console.warn('未找到要删除的卷');
+        ElMessage.warning('未找到要删除的卷');
+        return;
+      }
+      
       const updatedChapters = [...props.chapters]
       updatedChapters.splice(index, 1)
       emit('update:chapters', updatedChapters)
-    }
-  } else {
-    // 删除子节点(章节)
-    const parent = node.parent
-    if (parent && parent.data) {
+    } else {
+      // 删除子节点(章节)
+      const parent = node.parent
+      if (!parent || !parent.data) {
+        console.warn('未找到父节点');
+        ElMessage.warning('未找到父节点');
+        return;
+      }
+      
       const children = parent.data.children || []
       const index = children.findIndex((item: Chapter) => item.id === data.id)
-      if (index > -1) {
-        children.splice(index, 1)
-        emit('update:chapters', [...props.chapters])
+      if (index === -1) {
+        console.warn('未找到要删除的章节');
+        ElMessage.warning('未找到要删除的章节');
+        return;
       }
+      
+      children.splice(index, 1)
+      emit('update:chapters', [...props.chapters])
     }
+  } catch (error) {
+    console.error('删除节点失败:', error);
+    ElMessage.error('删除节点失败');
   }
 }
 
-// 处理节点点击
+/**
+ * 处理节点点击
+ * 当用户点击章节树中的节点时，触发章节选择事件
+ * 验证节点数据的有效性，确保节点ID存在
+ * 通知父组件当前选中的章节
+ * 如果处理失败，显示错误提示
+ * @param data - 被点击的节点数据
+ */
 const handleNodeClick = (data: Chapter) => {
-  emit('select-chapter', data)
+  try {
+    // 验证数据
+    if (!data || typeof data !== 'object') {
+      console.error('节点数据无效');
+      ElMessage.error('节点数据无效');
+      return;
+    }
+    
+    if (!data.id || typeof data.id !== 'string') {
+      console.error('节点ID无效');
+      ElMessage.error('节点ID无效');
+      return;
+    }
+    
+    emit('select-chapter', data);
+  } catch (error) {
+    console.error('处理节点点击失败:', error);
+    ElMessage.error('处理节点点击失败');
+  }
 }
 
-// 导出Word文档
+/**
+ * 导出Word文档
+ * 将当前书籍的所有章节内容导出为Word文档
+ * 验证当前书籍和标题的有效性
+ * 打开保存对话框让用户选择保存位置
+ * 使用DocumentService执行导出操作
+ * 如果导出失败，显示详细的错误提示
+ */
 const exportWord = async () => {
-  if (!props.currentBook) {
-    ElMessage.error('请先选择一本书籍');
-    return;
-  }
   try {
+    // 验证当前书籍
+    if (!props.currentBook) {
+      ElMessage.error('请先选择一本书籍');
+      return;
+    }
+    
+    if (!props.currentBook.title || typeof props.currentBook.title !== 'string') {
+      ElMessage.error('书籍标题无效');
+      return;
+    }
+    
     // 打开保存对话框
     const defaultPath = `${props.currentBook.title}.docx`;
+    
+    // 验证electronAPI是否存在
+    if (!window.electronAPI || typeof window.electronAPI.saveFileAs !== 'function') {
+      ElMessage.error('导出功能不可用');
+      return;
+    }
+    
     // 使用类型断言处理API返回结果的不一致性
     const result = await window.electronAPI.saveFileAs(defaultPath) as unknown as { 
       success: boolean; 
@@ -205,6 +399,11 @@ const exportWord = async () => {
       filePath?: string 
     };
 
+    if (!result || typeof result !== 'object') {
+      ElMessage.error('保存对话框返回结果无效');
+      return;
+    }
+    
     if (!result.success) {
       if (result.message) {
         ElMessage.error(result.message);
@@ -212,12 +411,23 @@ const exportWord = async () => {
       return; // 用户取消了保存
     }
     
+    if (!result.filePath || typeof result.filePath !== 'string') {
+      ElMessage.error('保存路径无效');
+      return;
+    }
+    
     const documentService = DocumentService.getInstance();
     const fileName = await documentService.exportToWord(props.currentBook, result.filePath as string);
+    
+    if (!fileName || typeof fileName !== 'string') {
+      ElMessage.error('导出结果无效');
+      return;
+    }
+    
     ElMessage.success(`文档已导出为: ${fileName}`);
   } catch (error) {
     console.error('导出Word文档失败:', error);
-    ElMessage.error(error.message);
+    ElMessage.error('导出Word文档失败: ' + (error.message || '未知错误'));
   }
 }
 </script>

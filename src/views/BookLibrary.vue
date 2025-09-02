@@ -6,6 +6,9 @@
         <button @click="showAIConfigModal = true" class="config-btn">
           <span class="icon">⚙️</span> AI配置
         </button>
+        <button @click="openSettings" class="config-btn">
+          <span class="icon">🔧</span> 系统设置
+        </button>
       </div>
       <h1 class="page-title">我的书库</h1>
       <div class="header-right">
@@ -114,12 +117,14 @@
 
 <script setup lang="ts">
 import { ElMessageBox } from 'element-plus'
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { BookConfigService } from '../services/bookConfigService'
-import AIConfigModal from '../components/AIConfigModal.vue'
 import { Book } from '../services/bookConfigService'
 import { replaceBookNameAndDescPromptVariables } from '../services/promptVariableService'
+
+// 异步加载AI配置模态框
+const AIConfigModal = defineAsyncComponent(() => import('../components/AIConfigModal.vue'))
 
 const router = useRouter()
 const books = ref<Book[]>([])
@@ -303,6 +308,12 @@ const applyAIContent = () => {
     ElMessage.warning('无法解析AI输出内容，请确保格式正确')
   }
 }
+
+// 打开系统设置
+const openSettings = () => {
+  // 触发打开设置事件
+  window.dispatchEvent(new CustomEvent('open-settings'))
+}
 </script>
 
 <style scoped>
@@ -315,7 +326,7 @@ const applyAIContent = () => {
 }
 
 .create-btn {
-  @apply bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-600 transition-colors;
+  @apply bg-blue-500 text-white px-3 py-1.5 rounded-md flex items-center gap-1.5 hover:bg-blue-600 transition-colors text-sm;
 }
 
 .icon {
@@ -335,15 +346,15 @@ const applyAIContent = () => {
 }
 
 .book-title {
-  @apply text-xl font-bold mb-2 text-gray-800;
+  @apply text-lg font-semibold mb-2 text-gray-800;
 }
 
 .book-desc {
-  @apply text-gray-600 mb-4 line-clamp-2;
+  @apply text-sm text-gray-600 mb-3 line-clamp-2;
 }
 
 .book-meta {
-  @apply text-sm text-gray-500 mb-4;
+  @apply text-xs text-gray-500 mb-3;
 }
 
 .book-actions {
@@ -351,15 +362,15 @@ const applyAIContent = () => {
 }
 
 .edit-btn {
-  @apply px-3 py-1.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors;
+  @apply px-2.5 py-1.5 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors;
 }
 
 .open-btn {
-  @apply px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors;
+  @apply px-2.5 py-1.5 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors;
 }
 
 .delete-btn {
-  @apply px-3 py-1.5 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors;
+  @apply px-2.5 py-1.5 text-xs bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors;
 }
 
 .empty-state {
@@ -371,11 +382,11 @@ const applyAIContent = () => {
 }
 
 .empty-text {
-  @apply text-xl font-medium text-gray-700 mb-2;
+  @apply text-lg font-medium text-gray-700 mb-2;
 }
 
 .empty-subtext {
-  @apply text-gray-500;
+  @apply text-sm text-gray-500;
 }
 
 .modal {
@@ -483,9 +494,9 @@ const applyAIContent = () => {
 }
 
 .page-title {
-  @apply text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 tracking-wider;
+  @apply text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 tracking-normal;
   font-family: "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
   transform: scale(1);
   transition: transform 0.2s ease;
 }
@@ -499,7 +510,7 @@ const applyAIContent = () => {
 }
 
 .config-btn {
-  @apply flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors;
+  @apply flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors;
 }
 
 .apply-btn {

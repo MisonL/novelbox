@@ -14,6 +14,9 @@
           <button @click="showOutline = true" class="outline-btn">
             <span class="outline-icon">📝</span> 大纲
           </button>
+          <button @click="openSettings" class="outline-btn">
+            <span class="outline-icon">🔧</span> 设置
+          </button>
         </div>
       </div>
       <OutlinePanel :show="showOutline" @close="showOutline = false" :currentBook="currentBook"
@@ -36,14 +39,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, onBeforeUnmount } from 'vue'
-import OutlinePanel from '../components/OutlinePanel.vue'
-import OutlineDetail from '../components/OutlineDetail.vue'
+import { ref, onMounted, watch, onBeforeUnmount, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
-import TextEditor from '../components/TextEditor.vue'
-import ChapterTree from '../components/ChapterTree.vue'
-import FragmentPane from '../components/FragmentPane.vue'
 import { BookConfigService, type Chapter, type Book } from '../services/bookConfigService'
+
+// 异步加载大型组件
+const OutlinePanel = defineAsyncComponent(() => import('../components/OutlinePanel.vue'))
+const OutlineDetail = defineAsyncComponent(() => import('../components/OutlineDetail.vue'))
+const TextEditor = defineAsyncComponent(() => import('../components/TextEditor.vue'))
+const ChapterTree = defineAsyncComponent(() => import('../components/ChapterTree.vue'))
+const FragmentPane = defineAsyncComponent(() => import('../components/FragmentPane.vue'))
 
 const router = useRouter()
 const bookTitle = ref('')
@@ -172,6 +177,12 @@ onBeforeUnmount(() => {
     document.removeEventListener('switch-to-fragments', switchToFragmentsHandler);
   }
 });
+
+// 打开系统设置
+const openSettings = () => {
+  // 触发打开设置事件
+  window.dispatchEvent(new CustomEvent('open-settings'))
+}
 </script>
 
 <style scoped>

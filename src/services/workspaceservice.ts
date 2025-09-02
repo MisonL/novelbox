@@ -4,7 +4,10 @@ export class WorkspaceService {
   static getWorkspacePath(): string {
     const workspacePath = localStorage.getItem('workspacePath');
     if (!workspacePath) {
-      throw new WorkspaceError('工作区路径读取失败，请重启程序');
+      // 在Web环境下，如果没有设置工作区路径，则设置一个默认路径
+      const defaultPath = '/web-workspace';
+      localStorage.setItem('workspacePath', defaultPath);
+      return defaultPath;
     }
     return workspacePath;
   }

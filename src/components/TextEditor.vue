@@ -113,7 +113,11 @@ const floatingToolbarController = new FloatingToolbarController({
 // 字数统计
 const chapterWordCount = ref(0)
 
-// 计算字数
+/**
+ * 计算当前章节字数
+ * 从编辑器中获取纯文本内容并计算字符数
+ * 用于在状态栏显示章节字数统计
+ */
 const calculateWordCount = () => {
   if (!props.currentChapter?.id) return;
 
@@ -125,21 +129,60 @@ const calculateWordCount = () => {
   }
 }
 
-// 初始化AI生成按钮
+/**
+ * 初始化AI生成按钮
+ * 在工具栏中添加AI生成章节的按钮，并绑定相关事件
+ * 需要在工具栏DOM元素加载完成后调用
+ */
 const initAIGenerateButton = () => {
   aiChapterGenerateController.initGenerateButton();
 }
 
-// 处理来自片段窗口的消息
+/**
+ * 处理来自片段窗口的消息
+ * 支持的操作：插入片段、替换片段、停止生成、重新生成内容
+ * @param messageStr - 来自片段窗口的JSON格式消息字符串
+ */
 const handleFragmentMessage = (messageStr: string) => {
   try {
+    // 验证消息字符串
+    if (!messageStr || typeof messageStr !== 'string') {
+      console.warn('收到无效的片段消息:', messageStr);
+      return;
+    }
     
     // 解析消息
     const data = JSON.parse(messageStr);
     
+    // 验证消息数据结构
+    if (!data || typeof data !== 'object') {
+      console.warn('片段消息数据格式无效:', data);
+      return;
+    }
+    
+    // 验证消息类型
+    if (!data.type || typeof data.type !== 'string') {
+      console.warn('片段消息缺少有效的类型字段:', data);
+      return;
+    }
+    
+    // 获取编辑器实例
+    const editor = quillEditor.value?.getQuill();
+    if (!editor) {
+      console.warn('编辑器实例不可用');
+      ElMessage.error('编辑器未初始化');
+      return;
+    }
+    
     if (data.type === 'insert-fragment') {
+      // 验证内容
+      if (!data.content || typeof data.content !== 'string') {
+        console.warn('插入片段内容无效:', data.content);
+        ElMessage.error('片段内容无效');
+        return;
+      }
+      
       // 插入内容到编辑器
-      const editor = quillEditor.value.getQuill();
       const selection = editor.getSelection();
       if (selection) {
         editor.insertText(selection.index, data.content, 'user');
@@ -149,8 +192,14 @@ const handleFragmentMessage = (messageStr: string) => {
         ElMessage.success('内容已插入到文档末尾');
       }
     } else if (data.type === 'replace-fragment') {
+      // 验证内容
+      if (!data.content || typeof data.content !== 'string') {
+        console.warn('替换片段内容无效:', data.content);
+        ElMessage.error('片段内容无效');
+        return;
+      }
+      
       // 替换选中内容
-      const editor = quillEditor.value.getQuill();
       const selection = editor.getSelection();
       if (selection && selection.length > 0) {
         editor.deleteText(selection.index, selection.length, 'user');
@@ -161,57 +210,156 @@ const handleFragmentMessage = (messageStr: string) => {
       }
     } else if (data.type === 'stop-generation') {
       // 停止AI生成，传递片段ID
-      if (data.fragmentId) {
+      if (data.fragmentId && typeof data.fragmentId === 'string') {
         floatingToolbarController.stopGeneration(data.fragmentId);
       } else {
-        console.warn('停止生成命令缺少fragmentId');
+        console.warn('停止生成命令缺少fragmentId或格式无效:', data.fragmentId);
         floatingToolbarController.stopGeneration();
       }
     } else if (data.type === 'regenerate-content') {
-      // 重新生成内容，传递片段ID
-      if (data.fragmentId) {
-        
-        floatingToolbarController.regenerateContent(
-          quillEditor.value.getQuill(), 
-          props.currentChapter, 
-          props.currentBook, 
-          data.fragmentId
-        );
-        
-      } else {
-        console.warn('重新生成命令缺少fragmentId');
+      // 验证必要参数
+      if (!data.fragmentId || typeof data.fragmentId !== 'string') {
+        console.warn('重新生成命令缺少fragmentId或格式无效:', data.fragmentId);
         ElMessage.error('重新生成需要指定片段ID');
+        return;
       }
+      
+      // 验证当前章节和书籍
+      if (!props.currentChapter) {
+        console.warn('当前章节不可用');
+        ElMessage.error('请先选择一个章节');
+        return;
+      }
+      
+      if (!props.currentBook) {
+        console.warn('当前书籍不可用');
+        ElMessage.error('请先选择一本书籍');
+        return;
+      }
+      
+      // 重新生成内容，传递片段ID
+      floatingToolbarController.regenerateContent(
+        editor, 
+        props.currentChapter, 
+        props.currentBook, 
+        data.fragmentId
+      );
     } else {
       console.warn('未知的片段消息类型:', data.type);
+      ElMessage.warning(`未知的消息类型: ${data.type}`);
     }
   } catch (error) {
     console.error('处理片段消息失败:', error);
+    ElMessage.error('处理片段消息时发生错误');
   }
 }
 
-// 处理扩写选中文本
+/**
+ * 处理扩写选中文本
+ * 使用浮动工具栏控制器对用户选中的文本进行扩写操作
+ * 需要验证编辑器、章节和书籍状态
+ */
 const handleExpandSelectedText = async () => {
-  const editor = quillEditor.value.getQuill();
-  await floatingToolbarController.expandSelectedText(editor, props.currentChapter, props.currentBook);
+  try {
+    const editor = quillEditor.value?.getQuill();
+    if (!editor) {
+      ElMessage.error('编辑器未初始化');
+      return;
+    }
+    
+    if (!props.currentChapter) {
+      ElMessage.error('请先选择一个章节');
+      return;
+    }
+    
+    if (!props.currentBook) {
+      ElMessage.error('请先选择一本书籍');
+      return;
+    }
+    
+    await floatingToolbarController.expandSelectedText(editor, props.currentChapter, props.currentBook);
+  } catch (error) {
+    console.error('扩写文本失败:', error);
+    ElMessage.error('扩写文本时发生错误');
+  }
 };
 
-// 处理缩写选中文本
+/**
+ * 处理缩写选中文本
+ * 使用浮动工具栏控制器对用户选中的文本进行缩写操作
+ * 需要验证编辑器、章节和书籍状态
+ */
 const handleCondenseSelectedText = async () => {
-  const editor = quillEditor.value.getQuill();
-  await floatingToolbarController.condenseSelectedText(editor, props.currentChapter, props.currentBook);
+  try {
+    const editor = quillEditor.value?.getQuill();
+    if (!editor) {
+      ElMessage.error('编辑器未初始化');
+      return;
+    }
+    
+    if (!props.currentChapter) {
+      ElMessage.error('请先选择一个章节');
+      return;
+    }
+    
+    if (!props.currentBook) {
+      ElMessage.error('请先选择一本书籍');
+      return;
+    }
+    
+    await floatingToolbarController.condenseSelectedText(editor, props.currentChapter, props.currentBook);
+  } catch (error) {
+    console.error('缩写文本失败:', error);
+    ElMessage.error('缩写文本时发生错误');
+  }
 };
 
-// 处理改写输入框获得焦点
+/**
+ * 处理改写输入框获得焦点
+ * 当用户点击改写输入框时，通知浮动工具栏控制器
+ * 用于调整工具栏位置和状态
+ */
 const handleRewriteInputFocus = () => {
-  const editor = quillEditor.value.getQuill();
-  floatingToolbarController.handleRewriteInputFocus(editor);
+  try {
+    const editor = quillEditor.value?.getQuill();
+    if (!editor) {
+      console.warn('编辑器未初始化，无法处理改写输入框焦点');
+      return;
+    }
+    floatingToolbarController.handleRewriteInputFocus(editor);
+  } catch (error) {
+    console.error('处理改写输入框焦点失败:', error);
+  }
 };
 
-// 处理改写选中文本
+/**
+ * 处理改写选中文本
+ * 使用浮动工具栏控制器根据用户输入的改写内容对选中文本进行改写
+ * 需要验证编辑器、章节和书籍状态
+ */
 const handleRewriteSelectedText = async () => {
-  const editor = quillEditor.value.getQuill();
-  await floatingToolbarController.rewriteSelectedText(editor, props.currentChapter, props.currentBook);
+  try {
+    const editor = quillEditor.value?.getQuill();
+    if (!editor) {
+      ElMessage.error('编辑器未初始化');
+      return;
+    }
+    
+    if (!props.currentChapter) {
+      ElMessage.error('请先选择一个章节');
+      return;
+    }
+    
+    if (!props.currentBook) {
+      ElMessage.error('请先选择一本书籍');
+      return;
+    }
+    
+    await floatingToolbarController.rewriteSelectedText(editor, props.currentChapter, props.currentBook);
+  } catch (error) {
+    console.error('改写文本失败:', error);
+    ElMessage.error('改写文本时发生错误');
+  }
 };
 
 let saveTimeout: NodeJS.Timeout | null = null;
@@ -220,7 +368,12 @@ let isModified = false;
 // 添加工具栏观察器
 let toolbarObserver: MutationObserver | null = null;
 
-// 监听工具栏变化
+/**
+ * 监听工具栏变化
+ * 使用MutationObserver监听工具栏DOM的变化
+ * 当工具栏发生变化时（如动态添加按钮），重新初始化AI生成按钮
+ * 确保AI生成按钮始终可用
+ */
 const observeToolbar = () => {
   if (toolbarObserver) {
     toolbarObserver.disconnect();
@@ -447,7 +600,16 @@ const emit = defineEmits<{
 const isUpdating = ref(false);
 const updateTimeout = ref<number | null>(null);
 
-// 优化章节切换逻辑
+/**
+ * 优化章节切换逻辑
+ * 处理章节切换时的各种操作：
+ * 1. 保存当前章节内容
+ * 2. 清空编辑器
+ * 3. 加载新章节内容
+ * 4. 重新绑定事件
+ * 5. 更新字数统计
+ * 使用requestAnimationFrame优化DOM更新性能
+ */
 watch(() => props.currentChapter, async (newChapter, oldChapter) => {
   
   try {
@@ -511,7 +673,12 @@ watch(() => props.currentChapter, async (newChapter, oldChapter) => {
   }
 }, { immediate: true, deep: true });
 
-// 优化内容更新逻辑
+/**
+ * 优化内容更新逻辑
+ * 使用防抖技术避免频繁计算字数
+ * 当用户输入时，延迟200ms后再计算字数
+ * 提高编辑器性能，减少不必要的计算
+ */
 const onTextChange = () => {
   if (isUpdating.value) return;
   
@@ -526,7 +693,13 @@ const onTextChange = () => {
 };
 
 // 保存章节内容
-// 获取最新章节内容
+/**
+ * 获取最新章节内容
+ * 从书籍配置中递归查找指定ID的章节内容
+ * 支持嵌套的章节结构（卷->章节）
+ * @param chapterId - 要查找的章节ID
+ * @returns 章节内容字符串，如果找不到则返回空字符串
+ */
 const getLatestChapterContent = async (chapterId: string) => {
   try {
     if (!props.currentBook) return '';
@@ -567,27 +740,82 @@ const saveChapterContent = async (chapterId?: string, contentToSave?: string) =>
   }
 }
 
-// 使用控制器的AI续写方法
+/**
+ * AI续写功能
+ * 使用AI文本继续控制器根据用户输入的续写指导生成后续内容
+ * 需要验证编辑器、章节和书籍状态
+ */
 const handleAIContinue = async () => {
-  const editor = quillEditor.value.getQuill();
-  await aiTextContinueController.handleAIContinue(editor, props.currentChapter, props.currentBook);
+  try {
+    const editor = quillEditor.value?.getQuill();
+    if (!editor) {
+      ElMessage.error('编辑器未初始化');
+      return;
+    }
+    
+    if (!props.currentChapter) {
+      ElMessage.error('请先选择一个章节');
+      return;
+    }
+    
+    if (!props.currentBook) {
+      ElMessage.error('请先选择一本书籍');
+      return;
+    }
+    
+    await aiTextContinueController.handleAIContinue(editor, props.currentChapter, props.currentBook);
+  } catch (error) {
+    console.error('AI续写失败:', error);
+    ElMessage.error('AI续写时发生错误');
+  }
 }
 
-// 使用控制器的输入框焦点方法
+/**
+ * 处理续写输入框获得焦点
+ * 当用户点击续写输入框时，通知AI文本继续控制器
+ * 用于显示续写光标和调整输入框位置
+ */
 const handleContinueInputFocus = () => {
-  const editor = quillEditor.value.getQuill();
-  aiTextContinueController.handleContinueInputFocus(editor);
+  try {
+    const editor = quillEditor.value?.getQuill();
+    if (!editor) {
+      console.warn('编辑器未初始化，无法处理续写输入框焦点');
+      return;
+    }
+    aiTextContinueController.handleContinueInputFocus(editor);
+  } catch (error) {
+    console.error('处理续写输入框焦点失败:', error);
+  }
 }
 
-// 使用控制器的输入框失焦方法
+/**
+ * 处理续写输入框失去焦点
+ * 当用户离开续写输入框时，通知AI文本继续控制器
+ * 用于隐藏续写光标
+ */
 const handleContinueInputBlur = () => {
   aiTextContinueController.handleContinueInputBlur();
 }
 
-// 处理选择变化，使用浮动工具栏控制器
+/**
+ * 处理文本选择变化
+ * 当用户在编辑器中选择文本时，通知浮动工具栏控制器
+ * 用于显示或隐藏浮动工具栏，并调整其位置
+ * @param range - 当前选择范围
+ * @param oldRange - 上一次选择范围
+ * @param source - 变化来源（用户、程序等）
+ */
 const handleSelectionChange = (range: any, oldRange: any, source: string) => {
-  const editor = quillEditor.value.getQuill();
-  floatingToolbarController.handleSelectionChange(range, oldRange, source, editor);
+  try {
+    const editor = quillEditor.value?.getQuill();
+    if (!editor) {
+      console.warn('编辑器未初始化，无法处理选择变化');
+      return;
+    }
+    floatingToolbarController.handleSelectionChange(range, oldRange, source, editor);
+  } catch (error) {
+    console.error('处理选择变化失败:', error);
+  }
 };
 </script>
 

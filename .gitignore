@@ -1,5 +1,41 @@
-# Logs
-logs
+# NovelBox 项目专用 .gitignore
+# 基于项目实际需求定制的忽略规则
+
+# === 构建输出 ===
+# 主要构建目录
+dist/
+dist-ssr/
+dist-electron/
+dist-web/
+release/
+
+# 临时构建文件
+*.local
+*.tsbuildinfo
+.vite/
+.vite-ssg-dist/
+.vite-ssg-temp/
+
+# === 依赖管理 ===
+# Node.js 依赖
+node_modules/
+.pnpm-store/
+.pnpmrc
+.npm
+.yarn
+.yarn-integrity
+
+# Python 虚拟环境（用于图标处理等）
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# === 运行时数据 ===
+# 日志文件
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,38 +43,152 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Dependencies
-node_modules
-.pnpm-store/
-.pnpmrc
+# 进程文件
+pids/
+*.pid
+*.seed
+*.pid.lock
 
-# Build outputs
-dist
-dist-ssr
-dist-electron
-release
-*.local
-
-# Electron specific
-out/
-
-# Editor directories and files
-.vscode
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Environment files
+# === 环境配置 ===
+# 环境变量文件
 .env
 .env.*
 !.env.example
+!.env.template
+.env.web
+.env.development.web
 
-# Testing
+# === 测试和覆盖率 ===
 coverage/
+.nyc_output/
+*.lcov
 
-# System Files
+# === 系统文件 ===
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.AppleDouble
+.LSOverride
+Icon
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# === 编辑器配置 ===
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# IntelliJ/WebStorm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# === 临时文件 ===
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+*.rej
+*.diff
+*.patch
+
+# === 包文件 ===
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+*.tgz
+*.deb
+*.rpm
+*.AppImage
+*.exe
+*.dmg
+
+# === 开发工具 ===
+# ESLint
+.eslintcache
+
+# TypeScript
+*.tsbuildinfo
+
+# Jest
+jest.config.js
+
+# === 项目特定 ===
+# Electron 构建输出
+out/
+build/
+
+# Docker
+.dockerignore
+
+# 本地数据库文件（如果使用SQLite）
+*.db
+*.sqlite
+*.sqlite3
+
+# 本地配置文件
+local-config.json
+user-settings.json
+
+# 临时工作区文件
+workspace-temp/
+temp/
+
+# === 忽略但保留示例 ===
+# 保留示例文件
+!example.env
+!template.env

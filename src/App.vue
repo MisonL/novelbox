@@ -14,47 +14,84 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import AIConfigModal from './components/AIConfigModal.vue'
-import About from './views/About.vue'
-import Settings from './views/Settings.vue'
+import { ref, onMounted, defineAsyncComponent } from 'vue'
+
+// 异步加载大型组件
+const AIConfigModal = defineAsyncComponent(() => import('./components/AIConfigModal.vue'))
+const About = defineAsyncComponent(() => import('./views/About.vue'))
+const Settings = defineAsyncComponent(() => import('./views/Settings.vue'))
 
 const showAIConfigModal = ref(false)
 const showAbout = ref(false)
 const showSettings = ref(false)
 
 onMounted(() => {
-  window.electronAPI.onOpenAISettings(() => {
-    showAIConfigModal.value = true
-  })
+  // 检查是否在Web环境中
+  const isWeb = import.meta.env.__IS_WEB__ || false
   
-  if (window.electronAPI && window.electronAPI.onOpenAboutPage) {
-    window.electronAPI.onOpenAboutPage(() => {
+  if (window.electronAPI) {
+    // Electron环境
+    window.electronAPI.onOpenAISettings(() => {
+      showAIConfigModal.value = true
+    })
+    
+    if (window.electronAPI.onOpenAboutPage) {
+      window.electronAPI.onOpenAboutPage(() => {
+        showAbout.value = true
+      })
+    }
+    
+    if (window.electronAPI.onOpenSettings) {
+      window.electronAPI.onOpenSettings(() => {
+        showSettings.value = true
+      })
+    }
+    
+    // 监听工作区变更事件
+    if (window.electronAPI.onWorkspaceChanged) {
+      window.electronAPI.onWorkspaceChanged((workspacePath) => {
+        console.log('工作区已更改:', workspacePath)
+        // 工作区变更由主进程处理，这里只记录日志
+      })
+    }
+    
+    // 监听触发工作区切换事件
+    if (window.electronAPI.onTriggerChangeWorkspace) {
+      window.electronAPI.onTriggerChangeWorkspace(async () => {
+        try {
+          await window.electronAPI.changeWorkspace();
+        } catch (error) {
+          console.error('更换工作区失败:', error);
+        }
+      })
+    }
+  } else if (isWeb) {
+    // Web环境 - 使用事件监听
+    window.addEventListener('open-ai-settings', () => {
+      showAIConfigModal.value = true
+    })
+    
+    window.addEventListener('open-about-page', () => {
       showAbout.value = true
     })
-  }
-  
-  if (window.electronAPI && window.electronAPI.onOpenSettings) {
-    window.electronAPI.onOpenSettings(() => {
+    
+    window.addEventListener('open-settings', () => {
       showSettings.value = true
     })
-  }
-  
-  // 监听工作区变更事件
-  if (window.electronAPI && window.electronAPI.onWorkspaceChanged) {
-    window.electronAPI.onWorkspaceChanged((workspacePath) => {
-      console.log('工作区已更改:', workspacePath)
-      // 工作区变更由主进程处理，这里只记录日志
+    
+    // 监听工作区变更事件
+    window.addEventListener('workspace-changed', (event: any) => {
+      console.log('工作区已更改:', event.detail)
     })
-  }
-  
-  // 监听触发工作区切换事件
-  if (window.electronAPI && window.electronAPI.onTriggerChangeWorkspace) {
-    window.electronAPI.onTriggerChangeWorkspace(async () => {
+    
+    // 监听触发工作区切换事件
+    window.addEventListener('trigger-change-workspace', async () => {
       try {
-        await window.electronAPI.changeWorkspace();
+        // 在Web环境中，使用模拟的changeWorkspace函数
+        const { changeWorkspace } = await import('./services/webFileService')
+        await changeWorkspace()
       } catch (error) {
-        console.error('更换工作区失败:', error);
+        console.error('更换工作区失败:', error)
       }
     })
   }

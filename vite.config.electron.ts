@@ -2,14 +2,19 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 
-// https://vite.dev/config/
+// Electron专用Vite配置
 export default defineConfig({
   plugins: [vue()],
   base: './',
   publicDir: 'public',
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src')
+      '@': resolve(__dirname, 'src'),
+      // 为Node.js模块创建别名，避免构建时解析
+      'mysql2/promise': resolve(__dirname, 'src/stubs/mysql2-stub.ts'),
+      'sqlite3': resolve(__dirname, 'src/stubs/sqlite3-stub.ts'),
+      'mongodb': resolve(__dirname, 'src/stubs/mongodb-stub.ts'),
+      'mssql': resolve(__dirname, 'src/stubs/mssql-stub.ts')
     }
   },
   build: {
@@ -18,38 +23,22 @@ export default defineConfig({
     rollupOptions: {
       external: [
         'electron',
-        'mongodb',
-        'mysql2',
-        'mssql',
-        'sqlite3',
-        'net',
-        'tls',
+        'electron/main',
+        'electron/preload',
         'fs',
         'path',
         'child_process',
-        'cluster',
-        'dgram',
-        'dns',
-        'domain',
-        'http',
-        'https',
-        'readline',
-        'repl',
-        'tls',
-        'tty',
-        'udp/dgram',
-        'url',
-        'util',
-        'v8',
-        'vm',
-        'zlib',
         'os',
         'crypto',
+        'net',
+        'tls',
+        'http',
+        'https',
+        'util',
         'stream',
         'events',
         'buffer',
         'querystring',
-        'string_decoder',
         'timers',
         'worker_threads'
       ],
@@ -66,14 +55,12 @@ export default defineConfig({
   },
   optimizeDeps: {
     esbuildOptions: {
-      // Node.js global to browser globalThis
       define: {
         global: 'globalThis',
       },
     }
   },
   define: {
-    // 确保Buffer可用
     global: 'window'
   }
 })

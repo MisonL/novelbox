@@ -1,5 +1,1 @@
-{
-  "references": [
-    { "path": "./tsconfig.electron.json" }
-  ]
-}
+{"references": [{"path": "./config/tsconfig.electron.json"}]}

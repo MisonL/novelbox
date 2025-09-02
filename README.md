@@ -1,4 +1,6 @@
-# NovelBox
+# NovelBox - 增强版AI小说创作工具
+
+> **本项目基于 [Rain-31/novelbox](https://github.com/Rain-31/novelbox) 进行二次开发，在原项目基础上增加了大量新功能和优化**
 
 <p align="center">
   <img src="public/icon.ico" alt="NovelBox Logo" width="120" height="120">
@@ -9,17 +11,54 @@
 </p>
 
 <p align="center">
-  <a href="#chinese-version">中文文档</a> |
+  <a href="#新增功能">新增功能</a> |
+  <a href="#中文文档">中文文档</a> |
   <a href="#english-version">English Documentation</a>
 </p>
 
 ---
 
-<h2 id="chinese-version">中文文档</h2>
+## 🚀 新增功能（基于原项目的增强）
+
+### 📊 数据库支持增强
+- ✅ **多数据库支持**：新增MongoDB、MySQL、SQL Server、SQLite支持
+- ✅ **Web端数据库**：支持浏览器localStorage和多种云端数据库
+- ✅ **数据迁移**：支持不同数据库间的数据迁移
+- ✅ **MongoDB Atlas**：集成免费层支持，无需本地安装
+
+### 🌐 跨平台部署
+- ✅ **Web版本**：新增完整的Web应用支持
+- ✅ **Docker部署**：提供Docker容器化部署方案
+- ✅ **跨平台**：支持Windows、macOS、Linux桌面应用
+- ✅ **响应式设计**：适配不同屏幕尺寸
+
+### 🤖 AI功能扩展
+- ✅ **多AI提供商**：新增DeepSeek、MiniMax支持
+- ✅ **AI片段管理**：支持保存和管理AI生成内容
+- ✅ **智能校对**：新增错别字和语法检查功能
+- ✅ **书名生成**：智能生成符合内容风格的书名
+- ✅ **简介生成**：一键生成吸引读者的作品简介
+
+### 📱 用户体验优化
+- ✅ **界面优化**：重新设计UI，提升视觉体验
+- ✅ **比例调整**：优化文字与按钮元素比例
+- ✅ **设置面板**：新增系统设置和数据库配置
+- ✅ **数据导出**：支持DOCX格式导出
+- ✅ **实时字数统计**：显示章节实时字数
+
+### 🔧 技术架构升级
+- ✅ **TypeScript重构**：全面使用TypeScript提升代码质量
+- ✅ **模块化设计**：更好的代码组织和维护性
+- ✅ **构建优化**：使用Vite替代Webpack，提升构建速度
+- ✅ **依赖管理**：使用pnpm提升依赖管理效率
+
+---
+
+<h2 id="中文文档">中文文档</h2>
 
 ## 项目介绍
 
-NovelBox是一款专为小说创作者设计的桌面应用程序，集成了多种AI模型（OpenAI、Anthropic、Google Gemini、DeepSeek、MiniMax），帮助作家更高效地进行创作。应用提供了直观的章节管理、大纲编辑、AI辅助续写等功能，让您的创作过程更加流畅和高效。
+NovelBox是一款专为小说创作者设计的应用程序，支持桌面端和Web端部署，集成了多种AI模型（OpenAI、Anthropic、Google Gemini、DeepSeek、MiniMax），帮助作家更高效地进行创作。应用提供了直观的章节管理、大纲编辑、AI辅助续写等功能，让创作过程更加流畅和高效。
 
 ## 功能特点
 
@@ -33,7 +72,6 @@ NovelBox是一款专为小说创作者设计的桌面应用程序，集成了多
   - 定向改写：根据指定要求智能改写选中内容
   - 书名生成：智能生成符合内容风格的书名建议
   - 简介生成：一键生成吸引读者的作品简介
-  - 支持多种AI模型：OpenAI、Anthropic Claude、Google Gemini、DeepSeek、MiniMax
 - **片段功能**：
   - 快速保存和管理创作片段
   - 方便记录AI生成的多个版本
@@ -47,186 +85,260 @@ NovelBox是一款专为小说创作者设计的桌面应用程序，集成了多
 - **搜索和替换**：快速查找和修改文本内容
 - **字数统计**：实时显示章节字数
 
-## 界面预览
+## 新增功能对比
 
-| 主界面 | 编辑器界面 |
-|:---:|:---:|
-| <img src="doc/main_screen.png" width="400"> | <img src="doc/editor_screen.png" width="400"> |
+| 功能类别 | 原项目 | 本项目增强 |
+|---------|--------|------------|
+| **数据库** | 仅本地文件 | 支持5种数据库 |
+| **部署方式** | 仅桌面应用 | 桌面+Web+Docker |
+| **AI模型** | 3种 | 5种主流模型 |
+| **导出格式** | 无 | 支持DOCX |
+| **界面设计** | 基础 | 现代化UI |
+| **跨平台** | Windows | Win/Mac/Linux |
 
-## 安装
+## 快速开始
 
-### 系统要求
-- Windows 10/11 64位操作系统
+### 桌面应用（推荐新手）
 
-### 下载与安装
-1. 从[Releases](https://github.com/Rain-31/novelbox/releases)页面下载最新版本的安装包
-2. 运行下载的安装程序
-3. 按照安装向导的指示完成安装
+#### 一键安装
+1. 从[Releases](https://github.com/MisonL/novelbox/releases)页面下载对应系统的安装包
+2. Windows用户下载 `.exe` 安装包
+3. macOS用户下载 `.dmg` 安装包
+4. Linux用户下载 `.AppImage` 或 `.deb` 安装包
 
-### 从源码构建
+#### 跨平台编译（使用electron-packager）
 ```bash
-# 克隆仓库
-git clone github.com/Rain-31/novelbox.git
+# 克隆项目
+git clone https://github.com/MisonL/novelbox.git
 cd novelbox
 
 # 安装依赖
 pnpm install
 
-# 开发模式运行
-pnpm run electron:dev
+# 编译Windows版本（无需Wine）
+pnpm run electron:build:win
 
-# 构建应用
-pnpm run electron:build
+# 编译macOS版本（需在macOS系统上）
+pnpm run electron:build:mac
 
-# 打包发布
-pnpm run electron:release
+# 编译Linux版本
+pnpm run electron:build:linux
+
+# 查看构建结果
+ls -la release/
+# Windows: release/NovelBox-win32-x64/NovelBox.exe
+# Linux: release/NovelBox-linux-x64/NovelBox
+# macOS: release/NovelBox-darwin-x64/NovelBox.app
 ```
 
-## 使用方法
+### 构建系统特点
+- **无需Wine**：使用electron-packager替代electron-builder，无需Wine环境
+- **优雅降级**：自动检测系统环境，不支持的平台会跳过构建
+- **完整依赖**：自动处理所有Node.js模块依赖
+- **一键脚本**：提供交互式构建菜单，支持参数化构建
 
-1. **创建新书**：在书库页面点击"新建书籍"按钮
-2. **进入编辑**：点击书籍卡片进入编辑界面
-3. **添加章节**：在左侧章节树中添加新章节或子章节
-4. **编写内容**：在编辑器中编写章节内容
-5. **AI辅助**：
-   - 使用AI生成功能生成全文
-   - 选中文本后使用扩写/缩写功能
-   - 在编辑器底部输入提示并点击"AI续写"按钮
-6. **使用片段功能**：
-   - 点击片段按钮保存当前生成结果
-   - 在片段面板中查看和比较不同版本
-   - 选择理想片段一键应用到正文
-7. **导出文档**：在书籍管理页面选择导出选项，将作品导出为DOCX格式
+### Web应用（推荐团队协作）
 
-## 技术栈
+#### 一键部署
+```bash
+# 使用Docker快速部署
+git clone https://github.com/MisonL/novelbox.git
+cd novelbox
+./deploy.sh
 
-- **前端框架**：Vue 3 + TypeScript
-- **UI组件**：Element Plus
-- **富文本编辑**：QuillJS
-- **构建工具**：Vite
-- **桌面应用**：Electron
-- **文档处理**：docx.js
-- **AI集成**：OpenAI API, Anthropic API, Google Generative AI, DeepSeek, MiniMax
+# 访问 http://localhost:8080
+```
 
-## 贡献
+#### 手动部署
+```bash
+# 构建Web版本
+pnpm run web:build
+
+# 使用Docker
+sudo docker build -t novelbox-web .
+sudo docker run -d -p 8080:80 novelbox-web
+```
+
+## 系统要求
+
+### 桌面应用
+- **Windows**: Windows 10/11 64位
+- **macOS**: macOS 10.15+ 
+- **Linux**: Ubuntu 18.04+, CentOS 7+
+
+### Web应用
+- **浏览器**: Chrome 80+, Firefox 75+, Safari 13+, Edge 80+
+- **Node.js**: 16.0+ (开发环境)
+- **Docker**: 20.10+ (容器部署)
+
+## 数据库配置
+
+### 1. 本地存储（默认）
+无需配置，开箱即用，适合个人使用。
+
+### 2. MongoDB Atlas（推荐云端）
+```bash
+# 免费注册MongoDB Atlas
+连接字符串: mongodb+srv://username:password@cluster.mongodb.net/novelbox
+```
+
+### 3. MySQL
+```bash
+# 本地MySQL配置
+主机: localhost:3306
+数据库: novelbox
+用户: root
+密码: your_password
+```
+
+### 4. 其他数据库
+支持SQL Server、SQLite，配置方式类似。
+
+## 开发指南
+
+### 环境准备
+```bash
+# 安装Node.js和pnpm
+npm install -g pnpm
+
+# 克隆项目
+git clone https://github.com/MisonL/novelbox.git
+cd novelbox
+
+# 安装依赖
+pnpm install
+```
+
+### 开发模式
+```bash
+# 桌面应用开发
+pnpm run electron:dev
+
+# Web应用开发
+pnpm run web:dev
+```
+
+### 构建命令
+```bash
+# 构建所有平台
+pnpm run build:all
+
+# 仅构建Windows
+pnpm run build:win
+
+# 仅构建macOS
+pnpm run build:mac
+
+# 仅构建Linux
+pnpm run build:linux
+
+# 构建Web版本
+pnpm run web:build
+```
+
+## 技术架构
+
+### 核心技术栈
+- **前端**: Vue 3 + TypeScript + Element Plus
+- **桌面**: Electron + Node.js
+- **构建**: Vite + Electron Builder
+- **数据库**: 支持5种数据库类型
+- **AI**: 集成5大主流AI平台
+
+### 项目结构
+```
+novelbox/
+├── electron/          # Electron主进程
+├── src/              # 前端源码
+├── config/           # 配置文件
+├── docker/           # Docker配置
+├── scripts/          # 构建脚本
+├── docs/             # 文档
+└── public/           # 静态资源
+```
+
+## 贡献指南
 
 我们欢迎各种形式的贡献！
 
-1. Fork本仓库
-2. 创建您的特性分支 (`git checkout -b feature/amazing-feature`)
-3. 提交您的更改 (`git commit -m 'Add some amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 开启一个Pull Request
+1. **Fork** 本项目
+2. **创建分支** (`git checkout -b feature/AmazingFeature`)
+3. **提交更改** (`git commit -m 'Add some AmazingFeature'`)
+4. **推送到分支** (`git push origin feature/AmazingFeature`)
+5. **开启Pull Request**
 
 ## 许可证
 
-本项目采用GNU通用公共许可证v3.0（GPL-3.0）进行许可。详情请参阅[LICENSE](LICENSE)文件。
+本项目基于原项目 [Rain-31/novelbox](https://github.com/Rain-31/novelbox) 的GPL-3.0许可证进行开源，并在此基础上进行了大量功能增强。
 
 ---
 
 <h2 id="english-version">English Documentation</h2>
 
-## Introduction
+## Project Introduction
 
-NovelBox is a desktop application designed specifically for novel writers, integrating various AI models (OpenAI, Anthropic, Google Gemini, DeepSeek, MiniMax) to help authors create more efficiently. The application provides intuitive chapter management, outline editing, AI-assisted continuation, and other features to make your creative process smoother and more productive.
+NovelBox is an enhanced AI-assisted novel writing tool based on the original [Rain-31/novelbox](https://github.com/Rain-31/novelbox) project. This enhanced version adds significant new features including web deployment, multi-database support, additional AI models, and cross-platform compatibility.
 
-## Features
+## Enhanced Features (Compared to Original)
 
-- **Book Library Management**: Create and manage multiple novel projects
-- **Chapter Tree Structure**: Intuitive organization and management of chapters
-- **Rich Text Editor**: Support for formatted text editing
-- **Outline Feature**: Help plan and organize story plots
-- **AI-Assisted Writing**:
-  - Smart Continuation: Automatically generate subsequent content based on context
-  - Content Expansion/Condensation: Adjust text length
-  - Targeted Rewriting: Intelligently rewrite selected content according to specific requirements
-  - Title Generation: Smart suggestions for book titles that match the content style
-  - Synopsis Generation: One-click generation of engaging book descriptions
-  - Support for Multiple AI Models: OpenAI, Anthropic Claude, Google Gemini, DeepSeek, MiniMax
-- **Fragment Feature**:
-  - Quick save and management of writing fragments
-  - Convenient recording of multiple versions generated by AI
-  - One-click application of fragment content to the text
-  - Support for fragment comparison and selection of the best version
-- **Smart Proofreading**:
-  - Automatic detection of typos and grammatical errors
-  - Intelligent correction suggestions
-  - One-click apply modifications
-- **Document Export**: Support for exporting to DOCX format
-- **Search and Replace**: Quickly find and modify text content
-- **Word Count**: Real-time display of chapter word count
+### 🚀 New Features Added
+- **Multi-Database Support**: MongoDB, MySQL, SQL Server, SQLite
+- **Web Application**: Complete web app with Docker support
+- **Cross-Platform**: Windows, macOS, Linux desktop apps
+- **Additional AI Models**: DeepSeek, MiniMax integration
+- **Modern UI**: Redesigned interface with better proportions
+- **DOCX Export**: Support for Microsoft Word format
+- **Real-time Statistics**: Live word count display
 
-## Installation
+### 📊 Comparison Table
 
-### System Requirements
-- Windows 10/11 64-bit operating system
+| Feature | Original | Enhanced |
+|---------|----------|----------|
+| **Database** | Local files only | 5 database types |
+| **Deployment** | Desktop only | Desktop + Web + Docker |
+| **AI Models** | 3 providers | 5 major providers |
+| **Export** | None | DOCX support |
+| **UI Design** | Basic | Modern |
+| **Cross-platform** | Windows only | Win/Mac/Linux |
 
-### Download and Installation
-1. Download the latest installation package from the [Releases](https://github.com/Rain-31/novelbox/releases) page
-2. Run the downloaded installer
-3. Follow the installation wizard instructions to complete the installation
+## Quick Start
 
-### Build from Source
+### Desktop Applications
 ```bash
-# Clone repository
-git clone https://github.com/Rain-31/novelbox.git
+# Clone the enhanced version
+git clone https://github.com/MisonL/novelbox.git
 cd novelbox
 
 # Install dependencies
 pnpm install
 
-# Run in development mode
-pnpm run electron:dev
-
-# Build application
-pnpm run electron:build
-
-# Package for release
-pnpm run electron:release
+# Build for your platform
+pnpm run build:win    # Windows
+pnpm run build:mac    # macOS
+pnpm run build:linux  # Linux
 ```
 
-## Usage
+### Web Application
+```bash
+# Quick Docker deployment
+./deploy.sh
 
-1. **Create New Book**: Click the "New Book" button on the library page
-2. **Enter Editing**: Click on a book card to enter the editing interface
-3. **Add Chapters**: Add new chapters or subchapters in the chapter tree on the left
-4. **Write Content**: Write chapter content in the editor
-5. **AI Assistance**:
-   - Use AI generation feature to create complete text
-   - Use expand/condense features after selecting text
-   - Enter prompts at the bottom of the editor and click "AI Continue" button
-6. **Using Fragment Feature**:
-   - Click the fragment button to save current generation results
-   - View and compare different versions in the fragment panel
-   - Select ideal fragment and apply to the main text with one click
-7. **Export Document**: Select export options on the book management page to export your work as a DOCX format
+# Or manual build
+pnpm run web:build
+```
 
-## Tech Stack
+## System Requirements
 
-- **Frontend Framework**: Vue 3 + TypeScript
-- **UI Components**: Element Plus
-- **Rich Text Editing**: QuillJS
-- **Build Tool**: Vite
-- **Desktop Application**: Electron
-- **Document Processing**: docx.js
-- **AI Integration**: OpenAI API, Anthropic API, Google Generative AI, DeepSeek, MiniMax
+### Desktop Apps
+- **Windows**: Windows 10/11 64-bit
+- **macOS**: macOS 10.15+
+- **Linux**: Ubuntu 18.04+, CentOS 7+
 
-## Contributing
-
-We welcome contributions of all forms!
-
-1. Fork this repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Web App
+- **Browsers**: Chrome 80+, Firefox 75+, Safari 13+, Edge 80+
+- **Node.js**: 16.0+
+- **Docker**: 20.10+ (optional)
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 (GPL-3.0). See the [LICENSE](LICENSE) file for details.
-
----
-
-<p align="center">
-  Made with ❤️ for writers everywhere
-</p>
+This project is based on [Rain-31/novelbox](https://github.com/Rain-31/novelbox) under GPL-3.0 license, with significant enhancements and new features added.
