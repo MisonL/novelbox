@@ -3,7 +3,6 @@
 
 import { DatabaseConfig, DatabaseType } from './databaseConfigService';
 import { DatabaseServiceFactory } from './databaseServiceFactory';
-import { DatabaseService } from './databaseService';
 
 export interface MigrationProgress {
   stage: string;
@@ -204,14 +203,12 @@ export class DatabaseMigrationService {
         // 导出章节
         const chapterKeys = Object.keys(localStorage).filter(k => k.startsWith(`chapter:${bookId}:`));
         data.books[bookId].chapters = chapterKeys.map(chapterKey => {
-          const chapterId = chapterKey.replace(`chapter:${bookId}:`, '');
           return JSON.parse(localStorage.getItem(chapterKey) || '{}');
         });
 
         // 导出片段
         const fragmentKeys = Object.keys(localStorage).filter(k => k.startsWith(`fragment:${bookId}:`));
         data.books[bookId].fragments = fragmentKeys.map(fragmentKey => {
-          const fragmentId = fragmentKey.replace(`fragment:${bookId}:`, '');
           return JSON.parse(localStorage.getItem(fragmentKey) || '{}');
         });
       } catch (error) {

@@ -105,7 +105,7 @@ export class AITextContinueController {
       
       await this.generateAndInsertText(editor, currentChapter, currentBook, currentContent, insertPosition);
       
-    } catch (error) {
+    } catch (_error) {
       // 用户关闭对话框
       return;
     }
@@ -249,6 +249,9 @@ export class AITextContinueController {
     const aiService = new AIService(aiConfig);
 
     try {
+      if (!currentBook) {
+        throw new Error('当前书籍信息不可用');
+      }
       const prompt = await replaceContinuePromptVariables(
         currentBook,
         currentChapter,

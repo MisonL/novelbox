@@ -3,43 +3,77 @@
     <div class="editor-header">
       <div class="title-section">
         <div class="left-section">
-          <button @click="backToLibrary" class="back-btn">
+          <button
+            class="back-btn"
+            @click="backToLibrary"
+          >
             <span class="back-icon">←</span> 返回书库
           </button>
         </div>
         <div class="center-section">
-          <h1 class="text-2xl font-bold book-title">{{ bookTitle || '小说编辑器' }}</h1>
+          <h1 class="text-2xl font-bold book-title">
+            {{ bookTitle || '小说编辑器' }}
+          </h1>
         </div>
         <div class="right-section">
-          <button @click="showOutline = true" class="outline-btn">
+          <button
+            class="outline-btn"
+            @click="showOutline = true"
+          >
             <span class="outline-icon">📝</span> 大纲
           </button>
-          <button @click="openSettings" class="outline-btn">
+          <button
+            class="outline-btn"
+            @click="openSettings"
+          >
             <span class="outline-icon">🔧</span> 设置
           </button>
         </div>
       </div>
-      <OutlinePanel :show="showOutline" @close="showOutline = false" :currentBook="currentBook"
-        :currentChapter="currentChapter" />
-      <OutlineDetail :show="showDetailOutline" @close="showDetailOutline = false" :currentBook="currentBook"
-        :currentChapter="currentChapter" />
+      <OutlinePanel
+        :show="showOutline"
+        :current-book="currentBook"
+        :current-chapter="currentChapter"
+        @close="showOutline = false"
+      />
+      <OutlineDetail
+        :show="showDetailOutline"
+        :current-book="currentBook"
+        :current-chapter="currentChapter"
+        @close="showDetailOutline = false"
+      />
     </div>
     <div class="editor-main">
       <div class="editor-sidebar">
-        <ChapterTree v-if="activeTab === 'chapters'" :chapters="currentBook?.content || []" :currentBook="currentBook"
-          @update:chapters="handleChaptersUpdate" @select-chapter="handleChapterSelect" @switch-tab="handleSwitchTab" />
-        <FragmentPane v-else :bookId="currentBook?.id || ''" :currentBook="currentBook" @switch-tab="handleSwitchTab"
-          @update:book="handleBookUpdate" />
+        <ChapterTree
+          v-if="activeTab === 'chapters'"
+          :chapters="currentBook?.content || []"
+          :current-book="currentBook"
+          @update:chapters="handleChaptersUpdate"
+          @select-chapter="handleChapterSelect"
+          @switch-tab="handleSwitchTab"
+        />
+        <FragmentPane
+          v-else
+          :book-id="currentBook?.id || ''"
+          :current-book="currentBook"
+          @switch-tab="handleSwitchTab"
+          @update:book="handleBookUpdate"
+        />
       </div>
       <div class="editor-content">
-        <TextEditor :current-chapter="currentChapter" :current-book="currentBook" @save-content="handleSaveContent" />
+        <TextEditor
+          :current-chapter="currentChapter"
+          :current-book="currentBook"
+          @save-content="handleSaveContent"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, onBeforeUnmount, defineAsyncComponent } from 'vue'
+import { ref, onMounted, onBeforeUnmount, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { BookConfigService, type Chapter, type Book } from '../services/bookConfigService'
 
@@ -68,6 +102,7 @@ const handleChapterSelect = async (chapter: Chapter) => {
           if (found) return found
         }
       }
+      return undefined
     }
 
     const latestChapter = findChapter(currentBook.value.content)
@@ -187,9 +222,10 @@ const openSettings = () => {
 
 <style scoped>
 .novel-editor-page {
-  @apply h-screen flex flex-col bg-gray-50 overflow-hidden;
+  @apply flex-1 flex flex-col bg-gray-50 overflow-hidden;
   width: 100%;
   max-width: 100%;
+  height: 100%;
 }
 
 .editor-header {
@@ -197,15 +233,21 @@ const openSettings = () => {
 }
 
 .title-section {
-  @apply flex items-center relative;
+  @apply flex items-center justify-between;
+  position: relative;
+  width: 100%;
 }
 
 .left-section {
-  @apply absolute left-0 z-10;
+  @apply flex-shrink-0;
+  position: static;
+  z-index: 10;
 }
 
 .center-section {
   @apply flex-1 flex justify-center;
+  position: static;
+  min-width: 0; /* Prevent overflow */
 }
 
 .back-btn {
@@ -217,19 +259,31 @@ const openSettings = () => {
 }
 
 .editor-main {
-  @apply flex-1 p-4 overflow-hidden flex gap-4;
+  @apply flex-1 p-2 flex gap-3;
+  display: flex !important;
+  flex-direction: row !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
 }
 
 .editor-sidebar {
-  @apply w-64 flex-shrink-0;
+  @apply w-60 flex-shrink-0;
+  flex-shrink: 0 !important;
+  width: 240px !important;
+  overflow-y: auto !important;
 }
 
 .editor-content {
   @apply flex-1 overflow-auto;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  overflow: auto !important;
 }
 
 .right-section {
-  @apply absolute right-0 z-10;
+  @apply flex-shrink-0;
+  position: static;
+  z-index: 10;
 }
 
 .outline-btn {

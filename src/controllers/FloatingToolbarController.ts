@@ -26,7 +26,7 @@ interface FloatingToolbarOptions {
 export default class FloatingToolbarController {
   private showFloatingToolbar: Ref<boolean> = ref(false);
   private toolbarStyle: Ref<{ top: string; left: string }> = ref({ top: '0px', left: '0px' });
-  private selectedTextRange: Ref<any> = ref(null);
+  private selectedTextRange: Ref<{ index: number; length: number } | null> = ref(null);
   private showRewriteInput: Ref<boolean> = ref(false);
   private rewriteContent: Ref<string> = ref('');
   private showFragmentCallback: (content: string, title: string) => void;
@@ -44,7 +44,7 @@ export default class FloatingToolbarController {
   }> = new Map();
 
   constructor(options: FloatingToolbarOptions) {
-    this.showFragmentCallback = options.onShowFragment || ((content: string, title: string) => {});
+    this.showFragmentCallback = options.onShowFragment || ((_: string, __: string) => {});
   }
 
   get showFloatingToolbarValue(): boolean {
@@ -59,11 +59,11 @@ export default class FloatingToolbarController {
     return this.toolbarStyle.value;
   }
 
-  get selectedTextRangeValue(): any {
+  get selectedTextRangeValue(): { index: number; length: number } | null {
     return this.selectedTextRange.value;
   }
 
-  set selectedTextRangeValue(value: any) {
+  set selectedTextRangeValue(value: { index: number; length: number } | null) {
     this.selectedTextRange.value = value;
   }
 
@@ -84,7 +84,7 @@ export default class FloatingToolbarController {
   }
 
   // 处理选择变化
-  handleSelectionChange(range: any, oldRange: any, source: string, quill: any): void {
+  handleSelectionChange(range: { index: number; length: number } | null, _oldRange: { index: number; length: number } | null, source: string, quill: any): void {
     // 如果点击在工具栏或输入框外，且当前有高亮状态，则移除高亮
     if (this.showRewriteInput.value) {
       const toolbar = document.querySelector('.floating-toolbar');
@@ -261,7 +261,7 @@ export default class FloatingToolbarController {
         const promises: Promise<void>[] = [];
         
         // 为每个活跃任务创建停止Promise
-        this.generationTasks.forEach((task, id) => {
+        this.generationTasks.forEach((_task, id) => {
           promises.push(this.stopGeneration(id));
         });
         
@@ -277,6 +277,10 @@ export default class FloatingToolbarController {
 
   // 重新生成指定片段ID的内容
   async regenerateContent(quill: any, currentChapter: any, currentBook: Book | null, fragmentId?: string): Promise<void> {
+    if (!currentBook) {
+      ElMessage.error('当前书籍信息不可用');
+      return;
+    }
     // 如果指定了片段ID，只重新生成该片段
     if (fragmentId) {
       const params = this.lastGenerationParams.get(fragmentId);
@@ -440,7 +444,7 @@ export default class FloatingToolbarController {
   }
 
   // 创建或更新流式片段窗口
-  private async showStreamingFragment(content: string, baseTitle: string, isFirst: boolean = false, isComplete: boolean = false, fragmentId?: string): Promise<string> {
+  private async showStreamingFragment(content: string, baseTitle: string, _isFirst: boolean = false, isComplete: boolean = false, fragmentId?: string): Promise<string> {
     // 如果提供了fragmentId且已存在，则更新该片段
     if (fragmentId && this.streamingFragments.has(fragmentId)) {
       const fragment = this.streamingFragments.get(fragmentId)!;
@@ -492,7 +496,7 @@ export default class FloatingToolbarController {
       const fragment: StreamingFragment = {
         id: newId,
         title: baseTitle,
-        content: content,
+        content,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         isGenerating: !isComplete,
@@ -530,6 +534,10 @@ export default class FloatingToolbarController {
 
   // 扩写选中文本
   async expandSelectedText(quill: any, currentChapter: any, currentBook: Book | null, existingFragmentId?: string): Promise<void> {
+    if (!currentBook) {
+      ElMessage.error('当前书籍信息不可用');
+      return;
+    }
     if (!this.selectedTextRange.value) return;
     const selectedText = quill.getText(this.selectedTextRange.value.index, this.selectedTextRange.value.length);
 
@@ -645,6 +653,10 @@ export default class FloatingToolbarController {
 
   // 缩写选中文本
   async condenseSelectedText(quill: any, currentChapter: any, currentBook: Book | null, existingFragmentId?: string): Promise<void> {
+    if (!currentBook) {
+      ElMessage.error('当前书籍信息不可用');
+      return;
+    }
     if (!this.selectedTextRange.value) return;
     const selectedText = quill.getText(this.selectedTextRange.value.index, this.selectedTextRange.value.length);
 
@@ -743,6 +755,10 @@ export default class FloatingToolbarController {
 
   // 改写选中文本
   async rewriteSelectedText(quill: any, currentChapter: any, currentBook: Book | null, existingFragmentId?: string): Promise<void> {
+    if (!currentBook) {
+      ElMessage.error('当前书籍信息不可用');
+      return;
+    }
     if (!this.selectedTextRange.value) return;
     const { index: tempIndex, length: tempLength } = this.selectedTextRange.value;
 
@@ -859,7 +875,7 @@ export default class FloatingToolbarController {
           const toolbar = document.querySelector('.floating-toolbar');
           if (toolbar) {
             // 获取工具栏和编辑器的位置信息
-            const toolbarRect = toolbar.getBoundingClientRect();
+            toolbar.getBoundingClientRect();
             const editorRect = quill.container.getBoundingClientRect();
             const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
             

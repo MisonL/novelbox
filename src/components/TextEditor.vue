@@ -1,51 +1,124 @@
 <template>
-  <Searcher v-if="quillEditor?.getQuill()" :quill="quillEditor.getQuill()"
-    v-model:showSearchReplace="showSearchReplace" />
-  <Proofreader v-if="showProofreader" :show="showProofreader" :content="content"
-    :current-chapter="currentChapter" :current-book="currentBook" :quill="quillEditor?.getQuill()"
-    @close="showProofreader = false" />
+  <Searcher
+    v-if="quillEditor?.getQuill()"
+    v-model:show-search-replace="showSearchReplace"
+    :quill="quillEditor.getQuill()"
+  />
+  <Proofreader
+    v-if="showProofreader"
+    :show="showProofreader"
+    :content="content"
+    :current-chapter="currentChapter"
+    :current-book="currentBook"
+    :quill="quillEditor?.getQuill()"
+    @close="showProofreader = false"
+  />
   <div class="text-editor-container">
-    <OutlineDetail v-if="showDetailOutline" :show="showDetailOutline" :current-chapter="currentChapter"
-      :current-book="currentBook" @close="showDetailOutline = false" />
-    <div v-if="!currentChapter || currentChapter.type !== 'chapter'" class="no-chapter-selected">
+    <OutlineDetail
+      v-if="showDetailOutline"
+      :show="showDetailOutline"
+      :current-chapter="currentChapter"
+      :current-book="currentBook"
+      @close="showDetailOutline = false"
+    />
+    <div
+      v-if="!currentChapter || currentChapter.type !== 'chapter'"
+      class="no-chapter-selected"
+    >
       <div class="text-center">
-        <p class="text-xl font-medium mb-2">请选择一个章节开始编辑</p>
-        <p class="text-gray-500">在左侧章节列表中选择要编辑的章节</p>
+        <p class="text-xl font-medium mb-2">
+          请选择一个章节开始编辑
+        </p>
+        <p class="text-gray-500">
+          在左侧章节列表中选择要编辑的章节
+        </p>
       </div>
     </div>
     <template v-else>
       <!-- 保存成功提示 -->
-      <div class="save-toast" v-show="showSaveToast">
+      <div
+        v-show="showSaveToast"
+        class="save-toast"
+      >
         <span class="icon">✓</span>
         内容保存成功
       </div>
 
       <!-- 添加光标图标 -->
-      <div v-if="aiTextContinueController.showContinueCursorValue" class="continue-cursor" 
-        :style="aiTextContinueController.continueCursorStyleValue">
-        <svg viewBox="0 0 24 24" width="28" height="28">
-          <path fill="currentColor" d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+      <div
+        v-if="aiTextContinueController.showContinueCursorValue"
+        class="continue-cursor" 
+        :style="aiTextContinueController.continueCursorStyleValue"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          width="28"
+          height="28"
+        >
+          <path
+            fill="currentColor"
+            d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"
+          />
         </svg>
       </div>
 
-      <QuillEditor v-model:content="content" :options="editorOptions" contentType="html" theme="snow"
-        @textChange="onTextChange" class="h-full" ref="quillEditor" />
+      <QuillEditor
+        ref="quillEditor"
+        v-model:content="content"
+        :options="editorOptions"
+        content-type="html"
+        theme="snow"
+        class="h-full"
+        @text-change="onTextChange"
+      />
       <div class="ai-continue-toolbar">
-        <input type="text" v-model="aiTextContinueController.continuePromptValue" placeholder="输入续写的剧情指导..." class="continue-input"
-          :disabled="aiTextContinueController.isGeneratingValue" @focus="handleContinueInputFocus" @blur="handleContinueInputBlur" />
-        <button @click="handleAIContinue" class="continue-btn" :class="{ 'stop-btn': aiTextContinueController.isGeneratingValue }">
+        <input
+          v-model="aiTextContinueController.continuePromptValue"
+          type="text"
+          placeholder="输入续写的剧情指导..."
+          class="continue-input"
+          :disabled="aiTextContinueController.isGeneratingValue"
+          @focus="handleContinueInputFocus"
+          @blur="handleContinueInputBlur"
+        >
+        <button
+          class="continue-btn"
+          :class="{ 'stop-btn': aiTextContinueController.isGeneratingValue }"
+          @click="handleAIContinue"
+        >
           {{ aiTextContinueController.isGeneratingValue ? '停止生成' : 'AI续写' }}
         </button>
       </div>
       <!-- Floating Toolbar -->
-      <div v-if="floatingToolbarController.showFloatingToolbarValue" class="floating-toolbar" :style="floatingToolbarController.toolbarStyleValue">
-        <button @click="handleExpandSelectedText">扩写</button>
-        <button @click="handleCondenseSelectedText">缩写</button>
-        <input v-if="floatingToolbarController.showRewriteInputValue" v-model="floatingToolbarController.rewriteContentValue" placeholder="输入改写内容..." class="rewrite-input"
-          @focus="handleRewriteInputFocus" />
-        <button @click="handleRewriteSelectedText" class="rewrite-btn">改写</button>
+      <div
+        v-if="floatingToolbarController.showFloatingToolbarValue"
+        class="floating-toolbar"
+        :style="floatingToolbarController.toolbarStyleValue"
+      >
+        <button @click="handleExpandSelectedText">
+          扩写
+        </button>
+        <button @click="handleCondenseSelectedText">
+          缩写
+        </button>
+        <input
+          v-if="floatingToolbarController.showRewriteInputValue"
+          v-model="floatingToolbarController.rewriteContentValue"
+          placeholder="输入改写内容..."
+          class="rewrite-input"
+          @focus="handleRewriteInputFocus"
+        >
+        <button
+          class="rewrite-btn"
+          @click="handleRewriteSelectedText"
+        >
+          改写
+        </button>
       </div>
-      <div class="status-bar" v-if="currentChapter && currentChapter.type === 'chapter'">
+      <div
+        v-if="currentChapter && currentChapter.type === 'chapter'"
+        class="status-bar"
+      >
         <span>本章字数：{{ chapterWordCount }}字</span>
       </div>
     </template>
@@ -102,8 +175,8 @@ const floatingToolbarController = new FloatingToolbarController({
   },
   onShowFragment: (content, title) => {
     // 调用片段面板的创建片段方法
-    if (fragmentPaneRef.value) {
-      fragmentPaneRef.value.createFragmentFromContent(content, title);
+    if (fragmentPaneRef.value && typeof (fragmentPaneRef.value as any).createFragmentFromContent === 'function') {
+      (fragmentPaneRef.value as any).createFragmentFromContent(content, title);
     } else {
       ElMessage.error('片段面板未初始化');
     }
@@ -410,7 +483,7 @@ onMounted(() => {
 })
 
 // 使用防抖处理，避免频繁保存，设置2秒延迟
-watch(content, (newValue) => {
+watch(content, () => {
   if (saveTimeout) {
     clearTimeout(saveTimeout);
   }
@@ -419,7 +492,7 @@ watch(content, (newValue) => {
   }
   isModified = true;
   saveTimeout = setTimeout(() => {
-    if (isModified) {
+    if (isModified && props.currentChapter) {
       saveChapterContent(props.currentChapter.id, content.value);
     }
   }, 2000);
@@ -467,8 +540,8 @@ const editorOptions = {
     clipboard: {
       matchVisual: false,
       matchers: [
-        [Node.TEXT_NODE, function (node, delta) {
-          return new Delta().insert(node.data);
+        [Node.TEXT_NODE, function (node: Node, _delta: Delta) {
+          return new Delta().insert((node as Text).data);
         }]
       ]
     },
@@ -487,21 +560,21 @@ const editorOptions = {
         ['ai-generate']
       ],
       handlers: {
-        'search': function () {
+        'search' () {
           showSearchReplace.value = !showSearchReplace.value;
         },
-        'detail-outline': function () {
+        'detail-outline' () {
           showDetailOutline.value = !showDetailOutline.value;
         },
-        'proofread': function () {
+        'proofread' () {
           showProofreader.value = !showProofreader.value;
         },
-        save: function () {
+        save () {
           if (props.currentChapter?.id) {
             saveChapterContent(props.currentChapter.id, content.value);
           }
         },
-        format: function () {
+        format () {
           const editor = quillEditor.value.getQuill();
           const selection = editor.getSelection();
 
@@ -510,13 +583,13 @@ const editorOptions = {
             editor.getContents();
 
           const formattedDelta = new Delta();
-          content.ops.forEach(op => {
+          content.ops.forEach((op: any) => {
             if (typeof op.insert === 'string') {
-              op.insert.split(/\n+/).forEach(paragraph => {
+              op.insert.split(/\n+/).forEach((paragraph: string) => {
                 const trimmed = paragraph.trim();
                 if (trimmed) {
                   formattedDelta
-                    .insert('　　' + trimmed)
+                    .insert(`　　${  trimmed}`)
                     .insert('\n\n', { 'indent-block': true });
                 }
               });
@@ -541,14 +614,14 @@ const editorOptions = {
             editor.setContents(formattedDelta, 'user');
           }
         },
-        'ai-generate': async function () {
+        async 'ai-generate' () {
           const editor = quillEditor.value.getQuill();
           await aiChapterGenerateController.handleAIGenerate(editor, props.currentChapter, props.currentBook);
         },
-        undo: function () {
+        undo () {
           quillEditor.value.getQuill().history.undo();
         },
-        redo: function () {
+        redo () {
           quillEditor.value.getQuill().history.redo();
         }
       }
@@ -711,6 +784,7 @@ const getLatestChapterContent = async (chapterId: string) => {
           if (found) return found;
         }
       }
+      return undefined;
     }
     const targetChapter = findChapterContent(props.currentBook.content || []);
     return targetChapter?.content || '';

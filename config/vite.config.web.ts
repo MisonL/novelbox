@@ -2,8 +2,12 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 // import legacy from '@vitejs/plugin-legacy'
 import { resolve } from 'path'
+import { fileURLToPath } from 'url'
 
 // https://vite.dev/config/
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = resolve(__filename, '..')
+
 export default defineConfig(({ mode }) => {
   // Web版本始终使用根路径作为base
   return {
@@ -129,6 +133,7 @@ export default defineConfig(({ mode }) => {
     // 外部化 Node.js 核心模块，减少警告
     resolve: {
       alias: {
+        '@': resolve(__dirname, '../src'),
         // 只保留必要的别名，其他由legacy插件处理
         'buffer': 'buffer',
         'process': 'process'

@@ -33,7 +33,7 @@ export class AIChapterGenerateController {
     
     // 如果按钮不存在，设置DOM观察器来监听按钮何时出现
     if (!document.querySelector('.ql-ai-generate') && !this.buttonObserver) {
-      this.buttonObserver = new MutationObserver((mutations) => {
+      this.buttonObserver = new MutationObserver(() => {
         const button = document.querySelector('.ql-ai-generate');
         if (button) {
           button.setAttribute('data-content', 'AI生成');
@@ -115,7 +115,7 @@ export class AIChapterGenerateController {
             // 用户选择不使用首章提示词，使用普通章节提示词
             prompt = await replaceChapterPromptVariables(currentBook, currentChapter);
           }
-        } catch (error) {
+        } catch (_error) {
           // 如果对话框出错，默认使用普通章节提示词
           prompt = await replaceChapterPromptVariables(currentBook, currentChapter);
         }
@@ -127,9 +127,9 @@ export class AIChapterGenerateController {
       let generatedText = '';
 
       // 执行AI生成
-      this.generationTask.value = await aiService.generateText(prompt, (text: string, error?: string, complete?: boolean) => {
-        if (error) {
-          ElMessage.error(`AI生成失败：${error}`);
+      this.generationTask.value = await aiService.generateText(prompt, (text: string, _error?: string, complete?: boolean) => {
+        if (_error) {
+          ElMessage.error(`AI生成失败：${_error}`);
           this.isGenerating.value = false;
           this.generationTask.value = null;
           this.initGenerateButton();

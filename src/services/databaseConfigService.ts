@@ -84,7 +84,7 @@ export class DatabaseConfigService {
     try {
       // 这里会调用具体的数据库服务来测试连接
       const { DatabaseServiceFactory } = await import('./databaseServiceFactory');
-      const service = DatabaseServiceFactory.createService(config);
+      const service = await DatabaseServiceFactory.createService(config);
       return await service.testConnection();
     } catch (error) {
       return {

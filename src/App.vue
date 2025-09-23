@@ -1,13 +1,27 @@
 <template>
   <div class="app-container">
-    <router-view></router-view>
-    <AIConfigModal v-model:showAIConfigModal="showAIConfigModal" />
-    <div v-if="showAbout" class="modal-overlay" @click="closeAbout"></div>
-    <div v-if="showAbout" class="modal">
+    <router-view />
+    <AIConfigModal v-model:show-a-i-config-modal="showAIConfigModal" />
+    <div
+      v-if="showAbout"
+      class="modal-overlay"
+      @click="closeAbout"
+    />
+    <div
+      v-if="showAbout"
+      class="modal"
+    >
       <About @close="closeAbout" />
     </div>
-    <div v-if="showSettings" class="modal-overlay" @click="closeSettings"></div>
-    <div v-if="showSettings" class="modal">
+    <div
+      v-if="showSettings"
+      class="modal-overlay"
+      @click="closeSettings"
+    />
+    <div
+      v-if="showSettings"
+      class="modal"
+    >
       <Settings @close="closeSettings" />
     </div>
   </div>
@@ -76,7 +90,9 @@ onMounted(() => {
     })
     
     window.addEventListener('open-settings', () => {
+      console.log('App.vue收到open-settings事件')
       showSettings.value = true
+      console.log('showSettings已设置为true:', showSettings.value)
     })
     
     // 监听工作区变更事件
@@ -117,7 +133,7 @@ function closeSettings() {
 
 <style scoped>
 .app-container {
-  @apply h-screen overflow-hidden flex justify-center;
+  @apply h-screen w-full overflow-hidden flex flex-col;
 }
 .modal-overlay {
   position: fixed;
@@ -126,14 +142,17 @@ function closeSettings() {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
+  z-index: 9999;
 }
 .modal {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 1001;
+  z-index: 10000;
+  margin: 0;
+  max-height: 90vh;
+  max-width: 90vw;
 }
 
 /* 最小化的片段样式 */

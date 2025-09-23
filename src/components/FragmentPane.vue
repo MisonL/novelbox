@@ -2,17 +2,24 @@
   <div class="fragment-pane">
     <div class="header-row">
       <SidebarToggle 
-        initialTab="fragments" 
+        initial-tab="fragments" 
         @toggle="handleToggle" 
       />
       <div class="action-buttons">
         <!-- <el-button class="action-button" circle>
           <el-icon><Document /></el-icon>
         </el-button> -->
-        <el-tooltip content="添加片段" placement="top">
-        <el-button class="action-button" @click="createFloatingFragment" circle>
-          <el-icon><Plus /></el-icon>
-        </el-button>
+        <el-tooltip
+          content="添加片段"
+          placement="top"
+        >
+          <el-button
+            class="action-button"
+            circle
+            @click="createFloatingFragment"
+          >
+            <el-icon><Plus /></el-icon>
+          </el-button>
         </el-tooltip>
       </div>
     </div>
@@ -25,8 +32,12 @@
         @click="selectFragment(fragment)"
       >
         <div class="fragment-content">
-          <div class="fragment-title">{{ fragment.title }}</div>
-          <div class="fragment-preview">{{ getPreview(fragment.content) }}</div>
+          <div class="fragment-title">
+            {{ fragment.title }}
+          </div>
+          <div class="fragment-preview">
+            {{ getPreview(fragment.content) }}
+          </div>
         </div>
         <div class="fragment-actions">
           <!-- <el-tooltip content="编辑" placement="top">
@@ -34,18 +45,28 @@
               <el-icon><Edit /></el-icon>
             </el-button>
           </el-tooltip> -->
-          <el-tooltip content="删除" placement="top">
-            <el-button circle size="small" type="danger" @click.stop="removeFragment(fragment)">
+          <el-tooltip
+            content="删除"
+            placement="top"
+          >
+            <el-button
+              circle
+              size="small"
+              type="danger"
+              @click.stop="removeFragment(fragment)"
+            >
               <el-icon><Delete /></el-icon>
             </el-button>
           </el-tooltip>
         </div>
       </div>
-      <div v-if="fragments.length === 0" class="empty-state">
+      <div
+        v-if="fragments.length === 0"
+        class="empty-state"
+      >
         暂无片段，点击上方"+"按钮添加
       </div>
     </div>
-    
   </div>
 </template>
 
@@ -75,7 +96,7 @@ const handleToggle = (tab: 'chapters' | 'fragments') => {
 // 获取片段预览
 const getPreview = (content: string): string => {
   if (!content) return '无内容'
-  return content.length > 50 ? content.substring(0, 50) + '...' : content
+  return content.length > 50 ? `${content.substring(0, 50)  }...` : content
 }
 
 // 监听片段保存事件
@@ -119,7 +140,7 @@ const createFloatingFragment = async () => {
     const result = await window.electronAPI.createFragmentWindow(newFragment)
     
     if (!result.success) {
-      ElMessage.error(`创建片段窗口失败: ${result.error?.message || '未知错误'}`)
+      ElMessage.error(`创建片段窗口失败: ${result.message || '未知错误'}`)
     }
   } catch (error) {
     console.error('创建片段窗口失败:', error)
@@ -138,7 +159,7 @@ const createFragmentFromContent = (content: string, title: string) => {
   const newFragment = {
     id: uuidv4(),
     title: title || '新片段',
-    content: content,
+    content,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }

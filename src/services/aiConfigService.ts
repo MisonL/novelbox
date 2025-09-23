@@ -8,12 +8,15 @@ export type ModelConfig = {
   topP?: number;
 };
 
-export type CustomProvider = {
-  name: string;
-  apiDomain: string;
-  apiPath: string;
-  model: string;
-};
+export interface CustomProvider {
+  name: string
+  apiDomain: string
+  apiPath: string
+  modelName: string
+}
+
+// ProviderConfig类型从类型文件导入
+export * from '../types/ai-config'
 
 export type GlobalConfig = {
   provider: string;
@@ -45,7 +48,7 @@ export class AIConfigService {
   static async saveConfig(provider: string, config: ProviderConfig | GlobalConfig): Promise<void> {
     try {
       const configPath = this.getConfigPath();
-      let currentConfig = await this.loadConfig();
+      const currentConfig = await this.loadConfig();
       
       // 如果是global配置，确保customProviders只保存在global中
       if (provider === 'global' && 'customProviders' in config) {
@@ -70,7 +73,7 @@ export class AIConfigService {
   static async deleteConfig(provider: string): Promise<void> {
     try {
       const configPath = this.getConfigPath();
-      let currentConfig = await this.loadConfig();
+      const currentConfig = await this.loadConfig();
       if (currentConfig[provider]) {
         delete currentConfig[provider];
         const configStr = JSON.stringify(currentConfig, null, 2);

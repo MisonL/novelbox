@@ -1,42 +1,9 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 const main_1 = require("@electron/remote/main");
-const path = __importStar(require("path"));
-const fs = __importStar(require("fs/promises"));
+const path = require("path");
+const fs = require("fs/promises");
 // 强制使用浅色主题，防止应用受系统主题影响
 electron_1.nativeTheme.themeSource = 'light';
 // 存储片段窗口的映射表
@@ -110,7 +77,8 @@ function createWindow() {
             preload: path.join(__dirname, process.env.VITE_DEV_SERVER_URL ? '../dist/electron/preload.js' : './preload.js'),
             nodeIntegration: false,
             contextIsolation: true,
-            webSecurity: true
+            webSecurity: true,
+            allowRunningInsecureContent: false
         },
         frame: true,
         titleBarStyle: 'default',
@@ -124,7 +92,7 @@ function createWindow() {
             return;
         }
         // 更新主窗口焦点状态
-        const mainWindowId = 'main-' + win.id;
+        const mainWindowId = `main-${  win.id}`;
         windowFocusStateBitmap.set(mainWindowId, true);
         // 检查是否有任何窗口有焦点
         let hasAnyFocus = false;
@@ -141,7 +109,7 @@ function createWindow() {
     // 监听主窗口失去焦点事件
     win.on('blur', () => {
         // 更新主窗口焦点状态
-        const mainWindowId = 'main-' + win.id;
+        const mainWindowId = `main-${  win.id}`;
         windowFocusStateBitmap.set(mainWindowId, false);
         if (!isMouseInAppWindows()) {
             // 检查是否所有窗口都失去了焦点
@@ -222,17 +190,28 @@ function createWindow() {
         win.loadURL(process.env.VITE_DEV_SERVER_URL);
     }
     else {
-        // 设置CSP头
+        // 设置CSP头 - 允许localStorage和文件访问
         win.webContents.session.webRequest.onHeadersReceived((details, callback) => {
             callback({
                 responseHeaders: {
                     ...details.responseHeaders,
-                    'Content-Security-Policy': ["default-src 'self' 'unsafe-inline' 'unsafe-eval' data: file: http: https: app:"]
+                    'Content-Security-Policy': ["default-src 'self' 'unsafe-inline' 'unsafe-eval' data: file:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' http: https: ws: wss:"]
                 }
             });
         });
-        // 使用file://协议加载本地文件
-        win.loadFile(path.join(__dirname, '../../dist/index.html'));
+        // 使用正确的文件路径加载本地文件
+        const indexPath = path.join(__dirname, '../dist/index.html');
+        console.log('Loading file from:', indexPath);
+        win.loadFile(indexPath).catch(err => {
+            console.error('Failed to load index.html:', err);
+            // 尝试备用路径 - 适用于打包后的应用
+            const altPath = path.join(__dirname, '../../app/dist/index.html');
+            win.loadFile(altPath).catch(err2 => {
+                console.error('Failed to load from app/dist:', err2);
+                // 最后尝试相对路径
+                win.loadFile(path.join(__dirname, 'dist/index.html'));
+            });
+        });
     }
     (0, main_1.enable)(win.webContents);
 }
@@ -311,7 +290,7 @@ function createMenu() {
                         await electron_1.shell.openPath(helpPath).catch(async (err) => {
                             console.error('打开帮助文档失败:', err);
                             // 如果直接打开失败，尝试用默认浏览器打开
-                            await electron_1.shell.openExternal('file://' + helpPath).catch(e => {
+                            await electron_1.shell.openExternal(`file://${  helpPath}`).catch(e => {
                                 console.error('使用浏览器打开帮助文档失败:', e);
                             });
                         });
@@ -637,7 +616,8 @@ electron_1.ipcMain.handle('create-fragment-window', async (_event, fragment) => 
                 preload: path.join(__dirname, process.env.VITE_DEV_SERVER_URL ? '../dist/electron/preload.js' : './preload.js'),
                 nodeIntegration: false,
                 contextIsolation: true,
-                webSecurity: true
+                webSecurity: true,
+                allowRunningInsecureContent: false
             },
             // 移除vibrancy和roundedCorners，它们在Windows下兼容性不好
             resizable: false, // 禁止调整大小以保持圆角外观
@@ -701,8 +681,22 @@ electron_1.ipcMain.handle('create-fragment-window', async (_event, fragment) => 
             await fragmentWindow.loadURL(`${process.env.VITE_DEV_SERVER_URL}#/fragment-editor`);
         }
         else {
-            await fragmentWindow.loadFile(path.join(__dirname, '../../dist/index.html'), {
+            const indexPath = path.join(__dirname, '../dist/index.html');
+            await fragmentWindow.loadFile(indexPath, {
                 hash: '/fragment-editor'
+            }).catch(err => {
+                console.error('Failed to load fragment window:', err);
+                // 尝试备用路径 - 适用于打包后的应用
+                const altPath = path.join(__dirname, '../../app/dist/index.html');
+                return fragmentWindow.loadFile(altPath, {
+                    hash: '/fragment-editor'
+                }).catch(err2 => {
+                    console.error('Failed to load from app/dist:', err2);
+                    // 最后尝试相对路径
+                    return fragmentWindow.loadFile(path.join(__dirname, 'dist/index.html'), {
+                        hash: '/fragment-editor'
+                    });
+                });
             });
         }
         // 显示窗口

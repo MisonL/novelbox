@@ -1,4 +1,15 @@
-import './buffer-polyfill'
+// 全局polyfill
+import { Buffer } from 'buffer'
+window.Buffer = Buffer
+// 兼容性处理
+if (typeof globalThis.process === 'undefined') {
+  globalThis.process = {
+    env: {},
+    version: '',
+     browser: true
+  } as any
+}
+
 import { createApp } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import ElementPlus from 'element-plus'
@@ -8,6 +19,7 @@ import App from './App.vue'
 import NovelEditor from './views/NovelEditor.vue'
 import BookLibrary from './views/BookLibrary.vue'
 import FragmentEditor from './views/FragmentEditor.vue'
+import { initMacOSFixes } from './macOS-fix'
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -37,6 +49,20 @@ router.beforeEach((to, _from, next) => {
 });
 
 const app = createApp(App)
+
+// Element Plus configuration for macOS
+app.use(ElementPlus, {
+  // macOS specific settings
+  zIndex: 3000,
+  size: 'default',
+  button: {
+    autoInsertSpace: true
+  }
+})
+
 app.use(router)
-app.use(ElementPlus)
+
+// 初始化macOS UI修复
+initMacOSFixes()
+
 app.mount('#app')

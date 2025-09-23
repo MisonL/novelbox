@@ -59,6 +59,7 @@ export const findCurrentChapter = (chapters: Chapter[]): Chapter | undefined => 
       if (found) return found
     }
   }
+  return undefined
 }
 
 /**

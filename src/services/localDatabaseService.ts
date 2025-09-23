@@ -3,7 +3,6 @@
 
 import { BaseDatabaseService } from './databaseService';
 import { Book, Chapter, Fragment } from './bookConfigService';
-import { DatabaseConfig } from './databaseConfigService';
 
 export class LocalDatabaseService extends BaseDatabaseService {
   private readonly BOOK_PREFIX = 'book:';

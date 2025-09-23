@@ -1,51 +1,107 @@
 <template>
-  <div v-if="show" class="outline-panel">
+  <div
+    v-if="show"
+    class="outline-panel"
+  >
     <div class="outline-header">
-      <h2 class="text-xl font-bold">大纲</h2>
-      <button @click="$emit('close')" class="close-btn">
+      <h2 class="text-xl font-bold">
+        大纲
+      </h2>
+      <button
+        class="close-btn"
+        @click="$emit('close')"
+      >
         <span class="close-icon">×</span>
       </button>
     </div>
     <div class="outline-tabs">
-      <button @click="activeTab = 'setting'" :class="['tab-btn', { active: activeTab === 'setting' }]">
+      <button
+        :class="['tab-btn', { active: activeTab === 'setting' }]"
+        @click="activeTab = 'setting'"
+      >
         设定
       </button>
-      <button @click="activeTab = 'plot'" :class="['tab-btn', { active: activeTab === 'plot' }]">
+      <button
+        :class="['tab-btn', { active: activeTab === 'plot' }]"
+        @click="activeTab = 'plot'"
+      >
         剧情
       </button>
     </div>
     <div class="outline-content">
-      <div v-show="activeTab === 'setting'" class="tab-panel" data-tab="setting">
-        <textarea v-model="settingContent" class="content-input" placeholder="写一些关于设定的想法，越多越好，点击'AI功能'-'AI润色'按钮..." @input="saveContent"
-          :disabled="isGenerating"></textarea>
+      <div
+        v-show="activeTab === 'setting'"
+        class="tab-panel"
+        data-tab="setting"
+      >
+        <textarea
+          v-model="settingContent"
+          class="content-input"
+          placeholder="写一些关于设定的想法，越多越好，点击'AI功能'-'AI润色'按钮..."
+          :disabled="isGenerating"
+          @input="saveContent"
+        />
         <div class="button-group">
           <div class="ai-dropdown">
-            <button @click="toggleAIMenu('setting')" class="ai-btn"
-              :disabled="isGenerating || !settingContent.trim()">
+            <button
+              class="ai-btn"
+              :disabled="isGenerating || !settingContent.trim()"
+              @click="toggleAIMenu('setting')"
+            >
               {{ isGenerating ? '生成中...' : 'AI功能' }}
             </button>
-            <div v-if="showAIMenu && activeAIMenuTab === 'setting'" class="ai-dropdown-menu">
-              <button @click="generateAIContent('setting')" class="dropdown-item">
+            <div
+              v-if="showAIMenu && activeAIMenuTab === 'setting'"
+              class="ai-dropdown-menu"
+            >
+              <button
+                class="dropdown-item"
+                @click="generateAIContent('setting')"
+              >
                 AI润色
               </button>
-              <button @click="updateSettings" class="dropdown-item">
+              <button
+                class="dropdown-item"
+                @click="updateSettings"
+              >
                 更新设定
               </button>
             </div>
           </div>
-          <button @click="saveContent" class="save-btn" :disabled="!settingContent.trim()">
+          <button
+            class="save-btn"
+            :disabled="!settingContent.trim()"
+            @click="saveContent"
+          >
             保存
           </button>
         </div>
       </div>
-      <div v-show="activeTab === 'plot'" class="tab-panel" data-tab="plot">
-        <textarea v-model="plotContent" class="content-input" placeholder="写一些剧情发展的大概思路，如何开始、如何发展、如何结局等等，点击'AI生成'按钮..."
-          @input="saveContent" :disabled="isGenerating"></textarea>
+      <div
+        v-show="activeTab === 'plot'"
+        class="tab-panel"
+        data-tab="plot"
+      >
+        <textarea
+          v-model="plotContent"
+          class="content-input"
+          placeholder="写一些剧情发展的大概思路，如何开始、如何发展、如何结局等等，点击'AI生成'按钮..."
+          :disabled="isGenerating"
+          @input="saveContent"
+        />
         <div class="button-group">
-          <button @click="generateAIContent('plot')" class="ai-btn" :disabled="isGenerating || !plotContent.trim()">
+          <button
+            class="ai-btn"
+            :disabled="isGenerating || !plotContent.trim()"
+            @click="generateAIContent('plot')"
+          >
             {{ isGenerating ? '生成中...' : 'AI生成' }}
           </button>
-          <button @click="saveContent" class="save-btn" :disabled="!plotContent.trim()">
+          <button
+            class="save-btn"
+            :disabled="!plotContent.trim()"
+            @click="saveContent"
+          >
             保存
           </button>
         </div>
@@ -168,9 +224,9 @@ const generateAIContent = async (type: 'setting' | 'plot') => {
     }
 
     if (type === 'setting') {
-      settingContent.value = response.text
+      settingContent.value = response.text || ''
     } else {
-      plotContent.value = response.text
+      plotContent.value = response.text || ''
     }
     saveContent()
   } catch (error) {
@@ -252,8 +308,8 @@ watch(() => props.show, (newVal) => {
   @apply h-full p-4 flex flex-col;
 }
 
-.content-input {
-  @apply w-full h-[calc(100%-80px)] p-1 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+.content-input{@apply w-full h-full p-1 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  height: calc(100% - 80px);
 }
 
 .button-group {

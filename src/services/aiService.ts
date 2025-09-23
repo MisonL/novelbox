@@ -25,12 +25,7 @@ export interface ChatMessage {
   content: string;
 }
 
-// 为Anthropic定义兼容的消息类型
-type AnthropicMessageRole = 'user' | 'assistant';
-interface AnthropicMessage {
-  role: AnthropicMessageRole;
-  content: string;
-}
+
 
 class AIService {
   private config: ProviderConfig;
@@ -38,7 +33,6 @@ class AIService {
   private anthropicClient?: Anthropic;
   private geminiClient?: GoogleGenerativeAI;
   private deepseekClient?: OpenAI;
-  private minimaxClient?: OpenAI;
   private minimaxApiKey?: string;
   private minimaxBaseUrl: string = 'https://api.minimaxi.com/v1';
 
@@ -62,14 +56,14 @@ class AIService {
       case 'openai':
         this.openaiClient = new OpenAI({
           apiKey: config.apiKey,
-          baseURL: 'https://api.openai.com/v1',
+          baseURL: config.proxyUrl || 'https://api.openai.com/v1',
           dangerouslyAllowBrowser: true,
         });
         break;
       case 'anthropic':
         this.anthropicClient = new Anthropic({
           apiKey: config.apiKey,
-          baseURL: 'https://api.anthropic.com',
+          baseURL: config.proxyUrl || 'https://api.anthropic.com',
           dangerouslyAllowBrowser: true,
         });
         break;
@@ -79,13 +73,20 @@ class AIService {
       case 'deepseek':
         this.deepseekClient = new OpenAI({
           apiKey: config.apiKey,
-          baseURL: 'https://api.deepseek.com',
+          baseURL: config.proxyUrl || 'https://api.deepseek.com',
           dangerouslyAllowBrowser: true,
         });
         break;
       case 'minimax':
         // 不使用OpenAI SDK，而是保存API密钥用于自定义实现
         this.minimaxApiKey = config.apiKey;
+        break;
+      case 'kimi':
+      case 'wenxin':
+      case 'alibailian':
+      case 'siliconflow':
+      case 'modelscope':
+        // 这些服务商使用统一的OpenAI SDK，在generateText方法中处理
         break;
       default:
         // 自定义服务商不需要初始化SDK客户端
@@ -115,11 +116,11 @@ class AIService {
       const response = await this.openaiClient.chat.completions.create({
         model: this.config.model,
         messages: chatMessages,
-        temperature: temperature,
+        temperature,
         max_tokens: maxTokens,
         top_p: topP,
         stream: true
-      }, { signal: signal });
+      }, { signal });
 
       let fullText = '';
       try {
@@ -155,7 +156,7 @@ class AIService {
       const response = await this.openaiClient.chat.completions.create({
         model: this.config.model,
         messages: chatMessages,
-        temperature: temperature,
+        temperature,
         max_tokens: maxTokens,
         top_p: topP
       });
@@ -207,17 +208,17 @@ class AIService {
           content: msg.content
         }));
     } else {
-      processedMessages = [{ role: 'user', content: prompt }];
+      processedMessages = [{ role: 'user' as const, content: prompt }];
     }
 
     if (stream) {
       const response = this.anthropicClient.messages.stream({
         model: this.config.model,
         messages: processedMessages,
-        temperature: temperature,
+        temperature,
         max_tokens: maxTokens,
         top_p: topP
-      }, { signal: signal });
+      }, { signal });
 
       let fullText = '';
       try {
@@ -257,7 +258,7 @@ class AIService {
       const response = await this.anthropicClient.messages.create({
         model: this.config.model,
         messages: processedMessages,
-        temperature: temperature,
+        temperature,
         max_tokens: maxTokens,
         top_p: topP
       });
@@ -273,9 +274,9 @@ class AIService {
     const model = this.geminiClient.getGenerativeModel({
       model: this.config.model,
       generationConfig: {
-        temperature: temperature,
+        temperature,
         maxOutputTokens: maxTokens,
-        topP: topP
+        topP
       }
     });
 
@@ -340,7 +341,7 @@ class AIService {
       }
 
       const chatOptions: any = {
-        history: history
+        history
       };
 
       // 如果有系统指令，添加到聊天选项中
@@ -417,11 +418,11 @@ class AIService {
       const response = await this.deepseekClient.chat.completions.create({
         model: this.config.model,
         messages: chatMessages,
-        temperature: temperature,
+        temperature,
         max_tokens: maxTokens,
         top_p: topP,
         stream: true
-      }, { signal: signal });
+      }, { signal });
 
       let fullText = '';
       try {
@@ -457,7 +458,7 @@ class AIService {
       const response = await this.deepseekClient.chat.completions.create({
         model: this.config.model,
         messages: chatMessages,
-        temperature: temperature,
+        temperature,
         max_tokens: maxTokens,
         top_p: topP
       });
@@ -481,7 +482,7 @@ class AIService {
     const requestBody = {
       model: this.config.model,
       messages: chatMessages,
-      temperature: temperature,
+      temperature,
       max_tokens: maxTokens,
       top_p: topP
     };
@@ -620,6 +621,734 @@ class AIService {
     }
   }
 
+  private async generateWithOllama(prompt: string, stream?: StreamCallback, signal?: AbortSignal, messages?: ChatMessage[]): Promise<string> {
+    const { temperature, maxTokens, topP } = this.getModelConfig();
+    
+    // 支持自定义base URL，默认使用localhost:11434
+    const baseURL = this.config.proxyUrl || 'http://localhost:11434/api/chat';
+    
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+
+    // 如果提供了messages，使用它们；否则创建单一用户消息
+    const chatMessages = messages || [{ role: 'user', content: prompt }];
+
+    // 支持自定义模型名称
+    const modelName = this.config.model === 'custom' ? (this.config.apiKey || 'llama2') : this.config.model;
+
+    const requestBody = {
+      model: modelName,
+      messages: chatMessages,
+      stream: !!stream,
+      options: {
+        temperature,
+        top_p: topP,
+        num_predict: maxTokens
+      }
+    };
+
+    if (stream) {
+      try {
+        const response = await fetch(baseURL, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(requestBody),
+          signal
+        });
+
+        if (!response.ok) {
+          throw new Error(`Ollama API错误: ${response.status} ${response.statusText}`);
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('Response body is null');
+        }
+
+        let fullText = '';
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done || signal?.aborted) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+          for (const line of lines) {
+            if (line.trim()) {
+              try {
+                const parsed = JSON.parse(line);
+                const content = parsed.message?.content || '';
+                if (content) {
+                  fullText += content;
+                  stream(content);
+                }
+                
+                // 检查是否完成
+                if (parsed.done) {
+                  stream('', undefined, true);
+                  return fullText;
+                }
+              } catch (e) {
+                console.error('解析Ollama响应失败:', e);
+              }
+            }
+          }
+        }
+        
+        if (!signal?.aborted) {
+          stream('', undefined, true);
+        }
+        return fullText;
+      } catch (error) {
+        if (stream) {
+          if (error instanceof Error && error.name === 'AbortError') {
+            stream('', '已中止生成');
+            return '';
+          }
+          stream('', error instanceof Error ? error.message : 'Ollama请求失败');
+        }
+        throw error;
+      }
+    } else {
+      try {
+        const response = await axios.post(baseURL, requestBody, {
+          headers,
+          signal
+        });
+
+        if (response.data.message?.content) {
+          return response.data.message.content;
+        } else {
+          throw new Error('Ollama API返回格式错误');
+        }
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          throw new Error(`Ollama连接失败: ${error.message}`);
+        }
+        throw error;
+      }
+    }
+  }
+
+  private async generateWithLMStudio(prompt: string, stream?: StreamCallback, signal?: AbortSignal, messages?: ChatMessage[]): Promise<string> {
+    const { temperature, maxTokens, topP } = this.getModelConfig();
+    
+    // 支持自定义base URL，默认使用localhost:1234
+    const baseURL = this.config.proxyUrl || 'http://localhost:1234/v1/chat/completions';
+    
+    const headers: { [key: string]: string } = {
+      'Content-Type': 'application/json'
+    };
+
+    // 如果提供了messages，使用它们；否则创建单一用户消息
+    const chatMessages = messages || [{ role: 'user', content: prompt }];
+
+    // 支持自定义模型名称
+    const modelName = this.config.model === 'custom' ? (this.config.apiKey || 'local-model') : this.config.model;
+
+    const requestBody = {
+      model: modelName,
+      messages: chatMessages,
+      temperature,
+      max_tokens: maxTokens,
+      top_p: topP,
+      stream: !!stream
+    };
+
+    // 如果提供了API密钥，添加到headers
+    if (this.config.apiKey && this.config.model !== 'custom') {
+      headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+    }
+
+    if (stream) {
+      try {
+        const response = await fetch(baseURL, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(requestBody),
+          signal
+        });
+
+        if (!response.ok) {
+          throw new Error(`LM Studio API错误: ${response.status} ${response.statusText}`);
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('Response body is null');
+        }
+
+        let fullText = '';
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done || signal?.aborted) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content || '';
+                if (content) {
+                  fullText += content;
+                  stream(content);
+                }
+              } catch (e) {
+                console.error('解析LM Studio响应失败:', e);
+              }
+            }
+          }
+        }
+        
+        if (!signal?.aborted) {
+          stream('', undefined, true);
+        }
+        return fullText;
+      } catch (error) {
+        if (stream) {
+          if (error instanceof Error && error.name === 'AbortError') {
+            stream('', '已中止生成');
+            return '';
+          }
+          stream('', error instanceof Error ? error.message : 'LM Studio请求失败');
+        }
+        throw error;
+      }
+    } else {
+      try {
+        const response = await axios.post(baseURL, requestBody, {
+          headers,
+          signal
+        });
+
+        return response.data.choices[0]?.message?.content || '';
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          throw new Error(`LM Studio连接失败: ${error.message}`);
+        }
+        throw error;
+      }
+    }
+  }
+
+  private async generateWithKimi(prompt: string, stream?: StreamCallback, signal?: AbortSignal, messages?: ChatMessage[]): Promise<string> {
+    const { temperature, maxTokens, topP } = this.getModelConfig();
+    
+    // 支持自定义base URL，默认使用Kimi官方API
+    const baseURL = this.config.proxyUrl || 'https://api.moonshot.cn/v1';
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${this.config.apiKey}`
+    };
+
+    // 如果提供了messages，使用它们；否则创建单一用户消息
+    const chatMessages = messages || [{ role: 'user', content: prompt }];
+
+    const requestBody = {
+      model: this.config.model,
+      messages: chatMessages,
+      temperature,
+      max_tokens: maxTokens,
+      top_p: topP,
+      stream: !!stream
+    };
+
+    if (stream) {
+      try {
+        const response = await fetch(`${baseURL}/chat/completions`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(requestBody),
+          signal
+        });
+
+        if (!response.ok) {
+          throw new Error(`Kimi API错误: ${response.status} ${response.statusText}`);
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('Response body is null');
+        }
+
+        let fullText = '';
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done || signal?.aborted) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content || '';
+                if (content) {
+                  fullText += content;
+                  stream(content);
+                }
+              } catch (e) {
+                console.error('解析Kimi响应失败:', e);
+              }
+            }
+          }
+        }
+        
+        if (!signal?.aborted) {
+          stream('', undefined, true);
+        }
+        return fullText;
+      } catch (error) {
+        if (stream) {
+          if (error instanceof Error && error.name === 'AbortError') {
+            stream('', '已中止生成');
+            return '';
+          }
+          stream('', error instanceof Error ? error.message : 'Kimi请求失败');
+        }
+        throw error;
+      }
+    } else {
+      try {
+        const response = await axios.post(`${baseURL}/chat/completions`, requestBody, {
+          headers,
+          signal
+        });
+
+        return response.data.choices[0]?.message?.content || '';
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          throw new Error(`Kimi连接失败: ${error.message}`);
+        }
+        throw error;
+      }
+    }
+  }
+
+  private async generateWithWenxin(prompt: string, stream?: StreamCallback, signal?: AbortSignal, messages?: ChatMessage[]): Promise<string> {
+    const { temperature, maxTokens, topP } = this.getModelConfig();
+    
+    // 支持自定义base URL，默认使用百度官方API
+    const baseURL = this.config.proxyUrl || 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat';
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${this.config.apiKey}`
+    };
+
+    // 如果提供了messages，使用它们；否则创建单一用户消息
+    const chatMessages = messages || [{ role: 'user', content: prompt }];
+
+    const requestBody = {
+      messages: chatMessages,
+      temperature,
+      max_output_tokens: maxTokens,
+      top_p: topP,
+      stream: !!stream
+    };
+
+    if (stream) {
+      try {
+        const response = await fetch(`${baseURL}/${this.config.model}`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(requestBody),
+          signal
+        });
+
+        if (!response.ok) {
+          throw new Error(`文心一言API错误: ${response.status} ${response.statusText}`);
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('Response body is null');
+        }
+
+        let fullText = '';
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done || signal?.aborted) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.result || '';
+                if (content) {
+                  fullText += content;
+                  stream(content);
+                }
+              } catch (e) {
+                console.error('解析文心一言响应失败:', e);
+              }
+            }
+          }
+        }
+        
+        if (!signal?.aborted) {
+          stream('', undefined, true);
+        }
+        return fullText;
+      } catch (error) {
+        if (stream) {
+          if (error instanceof Error && error.name === 'AbortError') {
+            stream('', '已中止生成');
+            return '';
+          }
+          stream('', error instanceof Error ? error.message : '文心一言请求失败');
+        }
+        throw error;
+      }
+    } else {
+      try {
+        const response = await axios.post(`${baseURL}/${this.config.model}`, requestBody, {
+          headers,
+          signal
+        });
+
+        return response.data.result || '';
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          throw new Error(`文心一言连接失败: ${error.message}`);
+        }
+        throw error;
+      }
+    }
+  }
+
+  private async generateWithAlibaba(prompt: string, stream?: StreamCallback, signal?: AbortSignal, messages?: ChatMessage[]): Promise<string> {
+    const { temperature, maxTokens, topP } = this.getModelConfig();
+    
+    // 支持自定义base URL，默认使用阿里云官方API
+    const baseURL = this.config.proxyUrl || 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation';
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${this.config.apiKey}`
+    };
+
+    // 如果提供了messages，使用它们；否则创建单一用户消息
+    const chatMessages = messages || [{ role: 'user', content: prompt }];
+
+    const requestBody = {
+      model: this.config.model,
+      input: {
+        messages: chatMessages
+      },
+      parameters: {
+        temperature,
+        max_tokens: maxTokens,
+        top_p: topP,
+        result_format: 'message'
+      }
+    };
+
+    if (stream) {
+      try {
+        const response = await fetch(`${baseURL}?stream=true`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(requestBody),
+          signal
+        });
+
+        if (!response.ok) {
+          throw new Error(`阿里百炼API错误: ${response.status} ${response.statusText}`);
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('Response body is null');
+        }
+
+        let fullText = '';
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done || signal?.aborted) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.output?.choices?.[0]?.message?.content || '';
+                if (content) {
+                  fullText += content;
+                  stream(content);
+                }
+              } catch (e) {
+                console.error('解析阿里百炼响应失败:', e);
+              }
+            }
+          }
+        }
+        
+        if (!signal?.aborted) {
+          stream('', undefined, true);
+        }
+        return fullText;
+      } catch (error) {
+        if (stream) {
+          if (error instanceof Error && error.name === 'AbortError') {
+            stream('', '已中止生成');
+            return '';
+          }
+          stream('', error instanceof Error ? error.message : '阿里百炼请求失败');
+        }
+        throw error;
+      }
+    } else {
+      try {
+        const response = await axios.post(baseURL, requestBody, {
+          headers,
+          signal
+        });
+
+        return response.data.output?.choices?.[0]?.message?.content || '';
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          throw new Error(`阿里百炼连接失败: ${error.message}`);
+        }
+        throw error;
+      }
+    }
+  }
+
+  private async generateWithSiliconflow(prompt: string, stream?: StreamCallback, signal?: AbortSignal, messages?: ChatMessage[]): Promise<string> {
+    const { temperature, maxTokens, topP } = this.getModelConfig();
+    
+    // 支持自定义base URL，默认使用硅基流动官方API
+    const baseURL = this.config.proxyUrl || 'https://api.siliconflow.cn/v1';
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${this.config.apiKey}`
+    };
+
+    // 如果提供了messages，使用它们；否则创建单一用户消息
+    const chatMessages = messages || [{ role: 'user', content: prompt }];
+
+    const requestBody = {
+      model: this.config.model,
+      messages: chatMessages,
+      temperature,
+      max_tokens: maxTokens,
+      top_p: topP,
+      stream: !!stream
+    };
+
+    if (stream) {
+      try {
+        const response = await fetch(`${baseURL}/chat/completions`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(requestBody),
+          signal
+        });
+
+        if (!response.ok) {
+          throw new Error(`硅基流动API错误: ${response.status} ${response.statusText}`);
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('Response body is null');
+        }
+
+        let fullText = '';
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done || signal?.aborted) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content || '';
+                if (content) {
+                  fullText += content;
+                  stream(content);
+                }
+              } catch (e) {
+                console.error('解析硅基流动响应失败:', e);
+              }
+            }
+          }
+        }
+        
+        if (!signal?.aborted) {
+          stream('', undefined, true);
+        }
+        return fullText;
+      } catch (error) {
+        if (stream) {
+          if (error instanceof Error && error.name === 'AbortError') {
+            stream('', '已中止生成');
+            return '';
+          }
+          stream('', error instanceof Error ? error.message : '硅基流动请求失败');
+        }
+        throw error;
+      }
+    } else {
+      try {
+        const response = await axios.post(`${baseURL}/chat/completions`, requestBody, {
+          headers,
+          signal
+        });
+
+        return response.data.choices[0]?.message?.content || '';
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          throw new Error(`硅基流动连接失败: ${error.message}`);
+        }
+        throw error;
+      }
+    }
+  }
+
+  private async generateWithModelscope(prompt: string, stream?: StreamCallback, signal?: AbortSignal, messages?: ChatMessage[]): Promise<string> {
+    const { temperature, maxTokens, topP } = this.getModelConfig();
+    
+    // 支持自定义base URL，默认使用魔塔社区官方API
+    const baseURL = this.config.proxyUrl || 'https://api-inference.modelscope.cn/v1';
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${this.config.apiKey}`
+    };
+
+    // 如果提供了messages，使用它们；否则创建单一用户消息
+    const chatMessages = messages || [{ role: 'user', content: prompt }];
+
+    const requestBody = {
+      model: this.config.model,
+      messages: chatMessages,
+      temperature,
+      max_tokens: maxTokens,
+      top_p: topP,
+      stream: !!stream
+    };
+
+    if (stream) {
+      try {
+        const response = await fetch(`${baseURL}/chat/completions`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(requestBody),
+          signal
+        });
+
+        if (!response.ok) {
+          throw new Error(`魔塔社区API错误: ${response.status} ${response.statusText}`);
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('Response body is null');
+        }
+
+        let fullText = '';
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done || signal?.aborted) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content || '';
+                if (content) {
+                  fullText += content;
+                  stream(content);
+                }
+              } catch (e) {
+                console.error('解析魔塔社区响应失败:', e);
+              }
+            }
+          }
+        }
+        
+        if (!signal?.aborted) {
+          stream('', undefined, true);
+        }
+        return fullText;
+      } catch (error) {
+        if (stream) {
+          if (error instanceof Error && error.name === 'AbortError') {
+            stream('', '已中止生成');
+            return '';
+          }
+          stream('', error instanceof Error ? error.message : '魔塔社区请求失败');
+        }
+        throw error;
+      }
+    } else {
+      try {
+        const response = await axios.post(`${baseURL}/chat/completions`, requestBody, {
+          headers,
+          signal
+        });
+
+        return response.data.choices[0]?.message?.content || '';
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          throw new Error(`魔塔社区连接失败: ${error.message}`);
+        }
+        throw error;
+      }
+    }
+  }
+
   private async generateWithCustomProvider(prompt: string, stream?: StreamCallback, signal?: AbortSignal, messages?: ChatMessage[]): Promise<string> {
     const customProvider = this.config.customProviders?.find(p => p.name === this.config.provider);
     if (!customProvider) {
@@ -659,7 +1388,7 @@ class AIService {
           body: JSON.stringify({
             model: this.config.model,
             messages: chatMessages,
-            temperature: temperature,
+            temperature,
             max_tokens: maxTokens,
             top_p: topP,
             stream: true
@@ -708,8 +1437,10 @@ class AIService {
               try {
                 const parsed = JSON.parse(data);
                 const content = parsed.choices[0]?.delta?.content || '';
-                fullText += content;
-                stream(content);
+                if (content) {
+                  fullText += content;
+                  stream(content);
+                }
               } catch (e) {
                 console.error('解析响应数据失败:', e);
               }
@@ -734,7 +1465,7 @@ class AIService {
         const response = await axios.post(baseURL, {
           model: this.config.model,
           messages: chatMessages,
-          temperature: temperature,
+          temperature,
           max_tokens: maxTokens,
           top_p: topP
         }, {
@@ -772,7 +1503,7 @@ class AIService {
 
     if (stream) {
       // 立即启动异步流处理
-      const streamProcess = (async () => {
+      (async () => {
         try {
           switch (this.config.provider) {
             case 'openai':
@@ -805,6 +1536,48 @@ class AIService {
                 stream(text, error);
               }, abortController.signal, messages);
               break;
+            case 'ollama':
+              await this.generateWithOllama(prompt, (text, error) => {
+                if (aborted) return;
+                stream(text, error);
+              }, abortController.signal, messages);
+              break;
+            case 'lmstudio':
+              await this.generateWithLMStudio(prompt, (text, error) => {
+                if (aborted) return;
+                stream(text, error);
+              }, abortController.signal, messages);
+              break;
+            case 'kimi':
+              await this.generateWithKimi(prompt, (text, error) => {
+                if (aborted) return;
+                stream(text, error);
+              }, abortController.signal, messages);
+              break;
+            case 'wenxin':
+              await this.generateWithWenxin(prompt, (text, error) => {
+                if (aborted) return;
+                stream(text, error);
+              }, abortController.signal, messages);
+              break;
+            case 'alibailian':
+              await this.generateWithAlibaba(prompt, (text, error) => {
+                if (aborted) return;
+                stream(text, error);
+              }, abortController.signal, messages);
+              break;
+            case 'siliconflow':
+              await this.generateWithSiliconflow(prompt, (text, error) => {
+                if (aborted) return;
+                stream(text, error);
+              }, abortController.signal, messages);
+              break;
+            case 'modelscope':
+              await this.generateWithModelscope(prompt, (text, error) => {
+                if (aborted) return;
+                stream(text, error);
+              }, abortController.signal, messages);
+              break;
             default:
               // 使用自定义服务商
               await this.generateWithCustomProvider(prompt, (text, error) => {
@@ -815,7 +1588,7 @@ class AIService {
           if (!aborted) stream('', undefined, true);
         } catch (error) {
           console.error('AI生成失败:', error);
-          if (!aborted) stream('', error instanceof Error ? error.message : 'Request failed', true);
+          if (!aborted) stream('', '生成失败，请稍后重试', true);
         }
       })();
 
@@ -848,6 +1621,27 @@ class AIService {
             break;
           case 'minimax':
             text = await this.generateWithMiniMax(prompt, undefined, undefined, messages);
+            break;
+          case 'ollama':
+            text = await this.generateWithOllama(prompt, undefined, undefined, messages);
+            break;
+          case 'lmstudio':
+            text = await this.generateWithLMStudio(prompt, undefined, undefined, messages);
+            break;
+          case 'kimi':
+            text = await this.generateWithKimi(prompt, undefined, undefined, messages);
+            break;
+          case 'wenxin':
+            text = await this.generateWithWenxin(prompt, undefined, undefined, messages);
+            break;
+          case 'alibailian':
+            text = await this.generateWithAlibaba(prompt, undefined, undefined, messages);
+            break;
+          case 'siliconflow':
+            text = await this.generateWithSiliconflow(prompt, undefined, undefined, messages);
+            break;
+          case 'modelscope':
+            text = await this.generateWithModelscope(prompt, undefined, undefined, messages);
             break;
           default:
             text = await this.generateWithCustomProvider(prompt, undefined, undefined, messages);

@@ -170,7 +170,7 @@ export const saveFragmentContent = async (fragment: any) => {
   }
 }
 
-export const requestFragmentData = async (windowId: number) => {
+export const requestFragmentData = async (_windowId: number) => {
   try {
     // 在Web环境中，windowId可能不对应实际的片段ID
     // 这里我们简单地返回第一个片段数据

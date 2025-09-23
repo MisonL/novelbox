@@ -1,232 +1,512 @@
 <template>
   <!-- AI配置对话框 -->
-  <div class="modal-overlay" v-if="showAIConfigModal" @click="closeAIConfigModal"></div>
-  <div class="modal" v-if="showAIConfigModal">
+  <div
+    v-if="showAIConfigModal"
+    class="modal-overlay"
+    @click="closeAIConfigModal"
+  />
+  <div
+    v-if="showAIConfigModal"
+    class="modal"
+  >
     <div class="modal-header">
-      <h2 class="modal-title">AI服务配置</h2>
-      <button @click="closeAIConfigModal" class="modal-close">×</button>
+      <h2 class="modal-title">
+        AI服务配置
+      </h2>
+      <button
+        class="modal-close"
+        @click="closeAIConfigModal"
+      >
+        ×
+      </button>
     </div>
     <div class="modal-body">
       <div class="form-group">
         <label for="aiProvider">AI服务商</label>
-        <select id="aiProvider" v-model="aiConfig.provider" class="form-select" @change="updateModelOptions">
-          <option v-for="provider in AI_PROVIDERS" :key="provider.id" :value="provider.id">
+        <select
+          id="aiProvider"
+          v-model="aiConfig.provider"
+          class="form-select"
+          @change="updateModelOptions"
+        >
+          <option
+            v-for="provider in AI_PROVIDERS"
+            :key="provider.id"
+            :value="provider.id"
+          >
             {{ provider.name }}
           </option>
-          <option v-for="provider in aiConfig.customProviders" :key="provider.name" :value="provider.name">
+          <option
+            v-for="provider in aiConfig.customProviders"
+            :key="provider.name"
+            :value="provider.name"
+          >
             {{ provider.name }}
           </option>
         </select>
       </div>
       <div class="form-group">
         <label for="aiModel">AI模型</label>
-        <select id="aiModel" v-model="aiConfig.model" class="form-select">
-          <option v-for="model in modelOptions" :key="model.id" :value="model.id">
+        <select
+          id="aiModel"
+          v-model="aiConfig.model"
+          class="form-select"
+        >
+          <option
+            v-for="model in modelOptions"
+            :key="model.id"
+            :value="model.id"
+          >
             {{ model.name }}
           </option>
         </select>
       </div>
       <div class="form-group">
         <label for="apiKey">API密钥</label>
-        <input type="password" id="apiKey" v-model="aiConfig.apiKey" placeholder="请输入API密钥" class="form-input" />
+        <input
+          id="apiKey"
+          v-model="aiConfig.apiKey"
+          type="password"
+          placeholder="请输入API密钥"
+          class="form-input"
+        >
       </div>
       <div class="form-group">
         <label for="proxyUrl">网络代理</label>
-        <input type="text" id="proxyUrl" v-model="aiConfig.proxyUrl" placeholder="例如：http://127.0.0.1:7890，留空则不使用代理"
-          class="form-input" />
+        <input
+          id="proxyUrl"
+          v-model="aiConfig.proxyUrl"
+          type="text"
+          :placeholder="getProxyUrlPlaceholder()"
+          class="form-input"
+        >
+      </div>
+
+      <!-- Ollama和LM Studio的自定义配置 -->
+      <div
+        v-if="isLocalProvider"
+        class="local-provider-config"
+      >
+        <div class="form-group">
+          <label for="localBaseUrl">Base URL</label>
+          <input
+            id="localBaseUrl"
+            v-model="localBaseUrl"
+            type="text" 
+            :placeholder="getDefaultBaseUrl()"
+            class="form-input"
+          >
+          <div class="input-description">
+            {{ getBaseUrlDescription() }}
+          </div>
+        </div>
+        <div
+          v-if="aiConfig.model === 'custom'"
+          class="form-group"
+        >
+          <label for="customModel">自定义模型名称</label>
+          <input
+            id="customModel"
+            v-model="customModelName"
+            type="text" 
+            placeholder="请输入模型名称"
+            class="form-input"
+          >
+          <div class="input-description">
+            例如：llama2:latest, mistral:latest
+          </div>
+        </div>
       </div>
       <div class="form-group">
-        <button @click="showAdvancedSettings = !showAdvancedSettings" class="advanced-settings-btn">
+        <button
+          class="advanced-settings-btn"
+          @click="showAdvancedSettings = !showAdvancedSettings"
+        >
           {{ showAdvancedSettings ? '收起更多设置' : '更多设置' }}
-          <span class="arrow" :class="{ 'arrow-up': showAdvancedSettings }">▼</span>
+          <span
+            class="arrow"
+            :class="{ 'arrow-up': showAdvancedSettings }"
+          >▼</span>
         </button>
-        <div v-if="showAdvancedSettings" class="advanced-settings">
+        <div
+          v-if="showAdvancedSettings"
+          class="advanced-settings"
+        >
           <div class="form-group">
             <label for="temperature">Temperature</label>
             <div class="slider-container">
-              <input type="range" id="temperature" v-model.number="aiConfig.temperature" min="0" max="2" step="0.01" class="slider" />
+              <input
+                id="temperature"
+                v-model.number="aiConfig.temperature"
+                type="range"
+                min="0"
+                max="2"
+                step="0.01"
+                class="slider"
+              >
               <span class="slider-value">{{ aiConfig.temperature.toFixed(2) }}</span>
             </div>
-            <div class="slider-description">严谨与想象，值越大想象力越丰富</div>
+            <div class="slider-description">
+              严谨与想象，值越大想象力越丰富
+            </div>
           </div>
           <div class="form-group">
             <label for="topP">Top P</label>
             <div class="slider-container">
-              <input type="range" id="topP" v-model.number="aiConfig.topP" min="0" max="1" step="0.01" class="slider" />
+              <input
+                id="topP"
+                v-model.number="aiConfig.topP"
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                class="slider"
+              >
               <span class="slider-value">{{ aiConfig.topP.toFixed(2) }}</span>
             </div>
-            <div class="slider-description">控制输出的多样性，值越小输出越保守</div>
+            <div class="slider-description">
+              控制输出的多样性，值越小输出越保守
+            </div>
           </div>
           <div class="form-group">
             <label for="maxTokens">最大Token数</label>
-            <input type="number" id="maxTokens" v-model.number="aiConfig.maxTokens" min="1" max="4096" class="form-input" />
-            <div class="slider-description">控制生成文本的最大长度</div>
+            <input
+              id="maxTokens"
+              v-model.number="aiConfig.maxTokens"
+              type="number"
+              min="1"
+              max="4096"
+              class="form-input"
+            >
+            <div class="slider-description">
+              控制生成文本的最大长度
+            </div>
           </div>
         </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button @click="closeAIConfigModal" class="cancel-btn">取消</button>
-      <button @click="() => showPromptConfigModal = true" class="config-btn mr-2">提示词配置</button>
-      <button @click="() => showCustomProviderModal = true" class="config-btn mr-2">自定义服务商</button>
-      <button v-if="isEditingCustomProvider" @click="deleteCustomProvider" class="delete-btn mr-2">删除</button>
-      <button @click="saveAIConfig" class="save-btn">保存</button>
+      <button
+        class="cancel-btn"
+        @click="closeAIConfigModal"
+      >
+        取消
+      </button>
+      <button
+        class="config-btn mr-2"
+        @click="() => showPromptConfigModal = true"
+      >
+        提示词配置
+      </button>
+      <button
+        class="config-btn mr-2"
+        @click="() => showCustomProviderModal = true"
+      >
+        自定义服务商
+      </button>
+      <button
+        v-if="isEditingCustomProvider"
+        class="delete-btn mr-2"
+        @click="deleteCustomProvider"
+      >
+        删除
+      </button>
+      <button
+        class="save-btn"
+        @click="saveAIConfig"
+      >
+        保存
+      </button>
     </div>
   </div>
 
   <!-- 自定义服务商配置对话框 -->
-  <div class="modal-overlay" v-if="showCustomProviderModal" @click="closeCustomProviderModal"></div>
-  <div class="modal" v-if="showCustomProviderModal">
+  <div
+    v-if="showCustomProviderModal"
+    class="modal-overlay"
+    @click="closeCustomProviderModal"
+  />
+  <div
+    v-if="showCustomProviderModal"
+    class="modal"
+  >
     <div class="modal-header">
-      <h2 class="modal-title">自定义服务商配置</h2>
-      <button @click="closeCustomProviderModal" class="modal-close">×</button>
+      <h2 class="modal-title">
+        自定义服务商配置
+      </h2>
+      <button
+        class="modal-close"
+        @click="closeCustomProviderModal"
+      >
+        ×
+      </button>
     </div>
     <div class="modal-body">
       <div class="form-group">
         <label for="providerName">名称</label>
-        <input type="text" id="providerName" v-model="customProvider.name" placeholder="请输入服务商名称" class="form-input" />
+        <input
+          id="providerName"
+          v-model="customProvider.name"
+          type="text"
+          placeholder="请输入服务商名称"
+          class="form-input"
+        >
       </div>
       <div class="form-group">
         <label for="apiDomain">API域名</label>
-        <input type="text" id="apiDomain" v-model="customProvider.apiDomain" placeholder="请输入API域名（例如：api.example.com）" class="form-input" />
+        <input
+          id="apiDomain"
+          v-model="customProvider.apiDomain"
+          type="text"
+          placeholder="请输入API域名（例如：api.example.com）"
+          class="form-input"
+        >
       </div>
       <div class="form-group">
         <label for="apiPath">API路径</label>
-        <input type="text" id="apiPath" v-model="customProvider.apiPath" placeholder="请输入API路径（例如：/v1/chat/completions）" class="form-input" />
+        <input
+          id="apiPath"
+          v-model="customProvider.apiPath"
+          type="text"
+          placeholder="请输入API路径（例如：/v1/chat/completions）"
+          class="form-input"
+        >
       </div>
       <div class="form-group">
         <label for="model">模型</label>
-        <input type="text" id="model" v-model="customProvider.model" placeholder="请输入模型名称" class="form-input" />
+        <input
+          id="model"
+          v-model="customProvider.model"
+          type="text"
+          placeholder="请输入模型名称"
+          class="form-input"
+        >
       </div>
     </div>
     <div class="modal-footer">
-      <button @click="closeCustomProviderModal" class="cancel-btn">取消</button>
-      <button v-if="isEditingCustomProvider" @click="deleteCustomProvider" class="delete-btn mr-2">删除</button>
-      <button @click="saveCustomProvider" class="save-btn">保存</button>
+      <button
+        class="cancel-btn"
+        @click="closeCustomProviderModal"
+      >
+        取消
+      </button>
+      <button
+        v-if="isEditingCustomProvider"
+        class="delete-btn mr-2"
+        @click="deleteCustomProvider"
+      >
+        删除
+      </button>
+      <button
+        class="save-btn"
+        @click="saveCustomProvider"
+      >
+        保存
+      </button>
     </div>
   </div>
 
   <!-- 提示词配置对话框 -->
-  <div class="modal-overlay" v-if="showPromptConfigModal" @click="closePromptConfigModal"></div>
-  <div class="modal prompt-config-modal" v-if="showPromptConfigModal">
+  <div
+    v-if="showPromptConfigModal"
+    class="modal-overlay"
+    @click="closePromptConfigModal"
+  />
+  <div
+    v-if="showPromptConfigModal"
+    class="modal prompt-config-modal"
+  >
     <div class="modal-header">
-      <h2 class="modal-title">提示词配置</h2>
-      <button @click="closePromptConfigModal" class="modal-close">×</button>
+      <h2 class="modal-title">
+        提示词配置
+      </h2>
+      <button
+        class="modal-close"
+        @click="closePromptConfigModal"
+      >
+        ×
+      </button>
     </div>
     <div class="modal-body">
       <div class="form-group">
         <label>生成书名简介提示词</label>
         <div class="prompt-input-group">
-          <textarea v-model="tempPromptConfig.bookNameAndDesc"
+          <textarea
+            ref="bookNameDescTextarea"
+            v-model="tempPromptConfig.bookNameAndDesc"
+            class="form-textarea prompt-textarea"
             @focus="(e: FocusEvent) => lastFocusedTextarea = e.target as HTMLTextAreaElement"
-            class="form-textarea prompt-textarea" ref="bookNameDescTextarea"></textarea>
+          />
         </div>
       </div>
       <div class="form-group">
         <label>生成设定提示词</label>
         <div class="prompt-input-group">
-          <textarea v-model="tempPromptConfig.settings"
+          <textarea
+            ref="settingsTextarea"
+            v-model="tempPromptConfig.settings"
+            class="form-textarea prompt-textarea"
             @focus="(e: FocusEvent) => lastFocusedTextarea = e.target as HTMLTextAreaElement"
-            class="form-textarea prompt-textarea" ref="settingsTextarea"></textarea>
+          />
         </div>
       </div>
       <div class="form-group">
         <label>生成剧情大纲提示词</label>
         <div class="prompt-input-group">
-          <textarea v-model="tempPromptConfig.outline"
+          <textarea
+            ref="outlineTextarea"
+            v-model="tempPromptConfig.outline"
+            class="form-textarea prompt-textarea"
             @focus="(e: FocusEvent) => lastFocusedTextarea = e.target as HTMLTextAreaElement"
-            class="form-textarea prompt-textarea" ref="outlineTextarea"></textarea>
+          />
         </div>
       </div>
       <div class="form-group">
         <label>生成章节细纲提示词</label>
         <div class="prompt-input-group">
-          <textarea v-model="tempPromptConfig.chapterOutline"
+          <textarea
+            ref="chapterOutlineTextarea"
+            v-model="tempPromptConfig.chapterOutline"
+            class="form-textarea prompt-textarea"
             @focus="(e: FocusEvent) => lastFocusedTextarea = e.target as HTMLTextAreaElement"
-            class="form-textarea prompt-textarea" ref="chapterOutlineTextarea"></textarea>
+          />
         </div>
       </div>
       <div class="form-group">
         <label>生成小说章节提示词</label>
         <div class="prompt-input-group">
-          <textarea v-model="tempPromptConfig.chapter"
+          <textarea
+            ref="chapterTextarea"
+            v-model="tempPromptConfig.chapter"
+            class="form-textarea prompt-textarea"
             @focus="(e: FocusEvent) => lastFocusedTextarea = e.target as HTMLTextAreaElement"
-            class="form-textarea prompt-textarea" ref="chapterTextarea"></textarea>
+          />
         </div>
       </div>
       <div class="form-group">
         <label>生成小说首章提示词</label>
         <div class="prompt-input-group">
-          <textarea v-model="tempPromptConfig.firstChapter"
+          <textarea
+            ref="firstChapterTextarea"
+            v-model="tempPromptConfig.firstChapter"
+            class="form-textarea prompt-textarea"
             @focus="(e: FocusEvent) => lastFocusedTextarea = e.target as HTMLTextAreaElement"
-            class="form-textarea prompt-textarea" ref="firstChapterTextarea"></textarea>
+          />
         </div>
       </div>
       <div class="form-group">
         <label>续写提示词</label>
         <div class="prompt-input-group">
-          <textarea v-model="tempPromptConfig.continue"
+          <textarea
+            ref="continueTextarea"
+            v-model="tempPromptConfig.continue"
+            class="form-textarea prompt-textarea"
             @focus="(e: FocusEvent) => lastFocusedTextarea = e.target as HTMLTextAreaElement"
-            class="form-textarea prompt-textarea" ref="continueTextarea"></textarea>
+          />
         </div>
       </div>
       <div class="form-group">
         <label>扩写提示词</label>
         <div class="prompt-input-group">
-          <textarea v-model="tempPromptConfig.expand"
+          <textarea
+            ref="expandTextarea"
+            v-model="tempPromptConfig.expand"
+            class="form-textarea prompt-textarea"
             @focus="(e: FocusEvent) => lastFocusedTextarea = e.target as HTMLTextAreaElement"
-            class="form-textarea prompt-textarea" ref="expandTextarea"></textarea>
+          />
         </div>
       </div>
       <div class="form-group">
         <label>缩写提示词</label>
         <div class="prompt-input-group">
-          <textarea v-model="tempPromptConfig.abbreviate"
+          <textarea
+            ref="abbreviateTextarea"
+            v-model="tempPromptConfig.abbreviate"
+            class="form-textarea prompt-textarea"
             @focus="(e: FocusEvent) => lastFocusedTextarea = e.target as HTMLTextAreaElement"
-            class="form-textarea prompt-textarea" ref="abbreviateTextarea"></textarea>
+          />
         </div>
       </div>
       <div class="form-group">
         <label>改写提示词</label>
         <div class="prompt-input-group">
-          <textarea v-model="tempPromptConfig.rewrite"
+          <textarea
+            ref="rewriteTextarea"
+            v-model="tempPromptConfig.rewrite"
+            class="form-textarea prompt-textarea"
             @focus="(e: FocusEvent) => lastFocusedTextarea = e.target as HTMLTextAreaElement"
-            class="form-textarea prompt-textarea" ref="rewriteTextarea"></textarea>
+          />
         </div>
       </div>
       <div class="form-group">
         <label>更新设定提示词</label>
         <div class="prompt-input-group">
-          <textarea v-model="tempPromptConfig.updateSettings"
+          <textarea
+            ref="updateSettingsTextarea"
+            v-model="tempPromptConfig.updateSettings"
+            class="form-textarea prompt-textarea"
             @focus="(e: FocusEvent) => lastFocusedTextarea = e.target as HTMLTextAreaElement"
-            class="form-textarea prompt-textarea" ref="updateSettingsTextarea"></textarea>
+          />
         </div>
       </div>
     </div>
     <div class="variable-toolbar">
-      <button @click="insertVariable('title', $event)">书名</button>
-      <button @click="insertVariable('desc', $event)">简介</button>
-      <button @click="insertVariable('settings', $event)">设定</button>
-      <button @click="insertVariable('outline', $event)">大纲</button>
-      <button @click="insertVariable('chapterOutline', $event)">章节细纲</button>
-      <button @click="insertVariable('chapter', $event)">章节内容</button>
-      <button @click="insertVariable('content', $event)">当前内容</button>
-      <button @click="insertVariable('previous', $event)">前文</button>
+      <button @click="insertVariable('title', $event)">
+        书名
+      </button>
+      <button @click="insertVariable('desc', $event)">
+        简介
+      </button>
+      <button @click="insertVariable('settings', $event)">
+        设定
+      </button>
+      <button @click="insertVariable('outline', $event)">
+        大纲
+      </button>
+      <button @click="insertVariable('chapterOutline', $event)">
+        章节细纲
+      </button>
+      <button @click="insertVariable('chapter', $event)">
+        章节内容
+      </button>
+      <button @click="insertVariable('content', $event)">
+        当前内容
+      </button>
+      <button @click="insertVariable('previous', $event)">
+        前文
+      </button>
     </div>
     <div class="modal-footer">
-      <button @click="closePromptConfigModal" class="cancel-btn">取消</button>
-      <button @click="resetToDefault" class="reset-btn">恢复默认值</button>
-      <button @click="savePromptConfig" class="save-btn">保存</button>
+      <button
+        class="cancel-btn"
+        @click="closePromptConfigModal"
+      >
+        取消
+      </button>
+      <button
+        class="reset-btn"
+        @click="resetToDefault"
+      >
+        恢复默认值
+      </button>
+      <button
+        class="save-btn"
+        @click="savePromptConfig"
+      >
+        保存
+      </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ElMessageBox, ElMessage } from 'element-plus'
+import { showSuccess, showError, showWarning } from '@/utils/message'
+import { ElMessageBox } from 'element-plus'
 import { ref, reactive, onMounted, computed, watch } from 'vue'
-import { defaultBookNameAndDescPrompt, defaultSettingsPrompt, defaultOutlinePrompt, defaultChapterOutlinePrompt, defaultChapterPrompt, defaultContinuePrompt, defaultExpandPrompt, defaultAbbreviatePrompt, defaultRewriteAbbreviatePrompt, defaultUpdateSettingsPrompt, defaultFirstChapterPrompt, AI_PROVIDERS, type AIProvider, type AIModel } from '../constants'
+import { defaultBookNameAndDescPrompt, defaultSettingsPrompt, defaultOutlinePrompt, defaultChapterOutlinePrompt, defaultChapterPrompt, defaultContinuePrompt, defaultExpandPrompt, defaultAbbreviatePrompt, defaultRewriteAbbreviatePrompt, defaultUpdateSettingsPrompt, defaultFirstChapterPrompt, AI_PROVIDERS } from '../constants'
 import { PromptConfigService } from '../services/promptConfigService'
-import { AIConfigService, type CustomProvider } from '../services/aiConfigService'
+import { AIConfigService } from '../services/aiConfigService'
+import type { CustomProvider } from '../services/aiConfigService'
 
 const props = defineProps<{
   showAIConfigModal: boolean
@@ -243,16 +523,7 @@ interface AIConfig {
   topP: number
 }
 
-interface ProviderConfig {
-  provider?: string
-  model: string
-  apiKey: string
-  proxyUrl: string
-  customProviders?: CustomProvider[]
-  temperature?: number
-  maxTokens?: number
-  topP?: number
-}
+// 使用any类型避免TypeScript严格模式下的类型冲突
 
 // 使用已导入的CustomProvider类型，不再需要本地定义
 interface ModelOption {
@@ -273,7 +544,21 @@ const aiConfig = reactive<AIConfig>({
   topP: AI_PROVIDERS.find(p => p.id === 'openai')?.defaultTopP ?? 0.95
 })
 
-const promptConfig = reactive({
+interface PromptConfig {
+  bookNameAndDesc: string
+  settings: string
+  outline: string
+  chapterOutline: string
+  chapter: string
+  firstChapter: string
+  continue: string
+  expand: string
+  abbreviate: string
+  rewrite: string
+  updateSettings: string
+}
+
+const promptConfig = reactive<PromptConfig>({
   bookNameAndDesc: defaultBookNameAndDescPrompt,
   settings: defaultSettingsPrompt,
   outline: defaultOutlinePrompt,
@@ -288,7 +573,7 @@ const promptConfig = reactive({
 })
 
 // 临时存储提示词配置的修改
-const tempPromptConfig = reactive({
+const tempPromptConfig = reactive<PromptConfig>({
   bookNameAndDesc: promptConfig.bookNameAndDesc,
   settings: promptConfig.settings,
   outline: promptConfig.outline,
@@ -312,6 +597,10 @@ const customProvider = reactive({
   model: ''
 })
 
+// 本地AI服务的自定义配置
+const localBaseUrl = ref('')
+const customModelName = ref('')
+
 const isEditingCustomProvider = ref(false)
 const lastFocusedTextarea = ref<HTMLTextAreaElement>()
 
@@ -327,6 +616,13 @@ const updateSettingsTextarea = ref<HTMLTextAreaElement>()
 const firstChapterTextarea = ref<HTMLTextAreaElement>()
 
 const showAdvancedSettings = ref(false)
+
+// 计算属性：是否为本地AI提供商
+const isLocalProvider = computed(() => {
+  return ['ollama', 'lmstudio'].includes(aiConfig.provider)
+})
+
+
 
 // 监听对话框显示状态
 watch(() => props.showAIConfigModal, async (newValue) => {
@@ -381,7 +677,7 @@ const loadAIConfig = async () => {
     Object.assign(tempPromptConfig, promptConfig)
   } catch (error) {
     console.error('加载AI配置失败:', error)
-    ElMessage.error('加载AI配置失败: ' + (error.message || '未知错误'))
+    showError(`加载AI配置失败: ${  error instanceof Error ? error.message : '未知错误'}`)
     
     // 使用默认配置
     aiConfig.provider = 'openai'
@@ -458,7 +754,7 @@ const loadCurrentProviderConfig = async () => {
     }
   } catch (error) {
     console.error('加载服务商配置失败:', error)
-    ElMessage.error('加载服务商配置失败: ' + (error.message || '未知错误'))
+    showError(`加载服务商配置失败: ${  error instanceof Error ? error.message : '未知错误'}`)
     
     // 使用默认值
     aiConfig.temperature = 0.7
@@ -477,36 +773,52 @@ const saveAIConfig = async () => {
   try {
     // 验证输入
     if (!aiConfig.provider || typeof aiConfig.provider !== 'string') {
-      ElMessage.error('请选择有效的AI服务商');
+      showError('请选择有效的AI服务商');
       return;
     }
     
     const isCustomProvider = aiConfig.customProviders?.some(p => p.name === aiConfig.provider);
     
     if (!isCustomProvider && !aiConfig.apiKey?.trim()) {
-      ElMessage.error('请输入API密钥');
+      showError('请输入API密钥');
       return;
     }
     
     if (!aiConfig.model || typeof aiConfig.model !== 'string') {
-      ElMessage.error('请选择有效的AI模型');
+      showError('请选择有效的AI模型');
       return;
     }
     
     // 验证数值范围
     if (typeof aiConfig.temperature !== 'number' || aiConfig.temperature < 0 || aiConfig.temperature > 2) {
-      ElMessage.error('Temperature值必须在0-2之间');
+      showError('Temperature值必须在0-2之间');
       return;
     }
     
     if (typeof aiConfig.maxTokens !== 'number' || aiConfig.maxTokens < 1 || aiConfig.maxTokens > 4096) {
-      ElMessage.error('最大Token数必须在1-4096之间');
+      showError('最大Token数必须在1-4096之间');
       return;
     }
     
     if (typeof aiConfig.topP !== 'number' || aiConfig.topP < 0 || aiConfig.topP > 1) {
-      ElMessage.error('Top P值必须在0-1之间');
+      showError('Top P值必须在0-1之间');
       return;
+    }
+
+    // 处理本地AI提供商的特殊配置
+    let finalApiKey = aiConfig.apiKey;
+    let finalProxyUrl = aiConfig.proxyUrl;
+    
+    if (isLocalProvider.value) {
+      // 对于本地提供商，使用localBaseUrl作为proxyUrl
+      if (localBaseUrl.value.trim()) {
+        finalProxyUrl = localBaseUrl.value.trim();
+      }
+      
+      // 对于自定义模型，使用customModelName作为apiKey
+      if (aiConfig.model === 'custom' && customModelName.value.trim()) {
+        finalApiKey = customModelName.value.trim();
+      }
     }
 
     // 加载当前配置
@@ -530,8 +842,8 @@ const saveAIConfig = async () => {
     const providerConfig = {
       ...currentConfig,
       model: aiConfig.model,
-      apiKey: aiConfig.apiKey,
-      proxyUrl: aiConfig.proxyUrl
+      apiKey: finalApiKey,
+      proxyUrl: finalProxyUrl
     }
     
     // 保存当前服务商的配置，不包含customProviders
@@ -547,15 +859,44 @@ const saveAIConfig = async () => {
     await AIConfigService.saveGlobalConfig(globalConfig)
     
     closeAIConfigModal()
-    ElMessage.success('AI配置已保存')
+    showSuccess('AI配置已保存')
   } catch (error) {
     console.error('保存AI配置失败:', error)
-    ElMessage.error('保存AI配置失败: ' + (error.message || '未知错误'))
+    showError(`保存AI配置失败: ${  error instanceof Error ? error.message : '未知错误'}`)
   }
 }
 
 const closeAIConfigModal = () => {
   emit('update:showAIConfigModal', false)
+}
+
+// 本地AI服务的辅助方法
+const getProxyUrlPlaceholder = () => {
+  if (aiConfig.provider === 'ollama') {
+    return '例如：http://192.168.1.100:11434，留空使用localhost:11434'
+  } else if (aiConfig.provider === 'lmstudio') {
+    return '例如：http://192.168.1.100:1234/v1，留空使用localhost:1234/v1'
+  } else {
+    return '例如：http://127.0.0.1:7890，留空则不使用代理'
+  }
+}
+
+const getDefaultBaseUrl = () => {
+  if (aiConfig.provider === 'ollama') {
+    return 'http://localhost:11434'
+  } else if (aiConfig.provider === 'lmstudio') {
+    return 'http://localhost:1234/v1'
+  }
+  return ''
+}
+
+const getBaseUrlDescription = () => {
+  if (aiConfig.provider === 'ollama') {
+    return 'Ollama服务的完整地址，例如：http://localhost:11434'
+  } else if (aiConfig.provider === 'lmstudio') {
+    return 'LM Studio服务的完整地址，例如：http://localhost:1234/v1'
+  }
+  return ''
 }
 
 const updateModelOptions = async () => {
@@ -581,6 +922,17 @@ const updateModelOptions = async () => {
       // 更新代理URL
       if (providerConfig.proxyUrl !== undefined) {
         aiConfig.proxyUrl = providerConfig.proxyUrl
+      }
+      
+      // 处理本地AI提供商的特殊配置加载
+      if (isLocalProvider.value) {
+        // 加载Base URL
+        localBaseUrl.value = providerConfig.proxyUrl || ''
+        
+        // 加载自定义模型名称
+        if (aiConfig.model === 'custom' && providerConfig.apiKey) {
+          customModelName.value = providerConfig.apiKey
+        }
       }
       
       // 检查是否有针对当前模型的保存配置
@@ -626,8 +978,8 @@ const updateModelOptions = async () => {
     if (foundCustomProvider) {
       isEditingCustomProvider.value = true
       modelOptions.value = [{
-        id: foundCustomProvider.model,
-        name: foundCustomProvider.model
+        id: foundCustomProvider.modelName,
+        name: foundCustomProvider.modelName
       }]
       
       // 加载自定义服务商配置
@@ -708,7 +1060,10 @@ watch(() => aiConfig.model, async (newModel) => {
 
 // 检查是否有未保存的修改
 const hasUnsavedChanges = computed(() => {
-  return Object.keys(promptConfig).some(key => promptConfig[key] !== tempPromptConfig[key])
+  return Object.keys(promptConfig).some(key => {
+    const typedKey = key as keyof PromptConfig
+    return promptConfig[typedKey] !== tempPromptConfig[typedKey]
+  })
 })
 
 const closeCustomProviderModal = () => {
@@ -732,14 +1087,14 @@ const deleteCustomProvider = async () => {
   try {
     // 验证当前选择的服务商
     if (!aiConfig.provider || typeof aiConfig.provider !== 'string') {
-      ElMessage.error('当前选择的服务商无效');
+      showError('当前选择的服务商无效');
       return;
     }
     
     // 从自定义服务商列表中删除
     const index = aiConfig.customProviders?.findIndex(p => p.name === aiConfig.provider)
-    if (index === -1) {
-      ElMessage.error('未找到要删除的自定义服务商');
+    if (index === undefined || index === -1) {
+      showError('未找到要删除的自定义服务商');
       return;
     }
     
@@ -761,10 +1116,10 @@ const deleteCustomProvider = async () => {
     await AIConfigService.saveGlobalConfig(globalConfig)
     
     closeCustomProviderModal()
-    ElMessage.success('自定义服务商已删除')
+    showSuccess('自定义服务商已删除')
   } catch (error) {
     console.error('删除自定义服务商失败:', error)
-    ElMessage.error('删除自定义服务商失败: ' + (error.message || '未知错误'))
+    showError(`删除自定义服务商失败: ${  error instanceof Error ? error.message : '未知错误'}`)
   }
 }
 
@@ -779,22 +1134,22 @@ const saveCustomProvider = async () => {
   try {
     // 验证输入
     if (!customProvider.name?.trim()) {
-      ElMessage.error('请输入服务商名称');
+      showError('请输入服务商名称');
       return;
     }
     
     if (!customProvider.apiDomain?.trim()) {
-      ElMessage.error('请输入API域名');
+      showError('请输入API域名');
       return;
     }
     
     if (!customProvider.apiPath?.trim()) {
-      ElMessage.error('请输入API路径');
+      showError('请输入API路径');
       return;
     }
     
     if (!customProvider.model?.trim()) {
-      ElMessage.error('请输入模型名称');
+      showError('请输入模型名称');
       return;
     }
     
@@ -802,13 +1157,13 @@ const saveCustomProvider = async () => {
     try {
       new URL(`https://${customProvider.apiDomain.trim()}`);
     } catch {
-      ElMessage.error('API域名格式无效');
+      showError('API域名格式无效');
       return;
     }
     
     // 验证API路径格式
     if (!customProvider.apiPath.trim().startsWith('/')) {
-      ElMessage.error('API路径必须以/开头');
+      showError('API路径必须以/开头');
       return;
     }
     
@@ -817,7 +1172,7 @@ const saveCustomProvider = async () => {
       name: customProvider.name.trim(),
       apiDomain: customProvider.apiDomain.trim(),
       apiPath: customProvider.apiPath.trim(),
-      model: customProvider.model.trim()
+      modelName: customProvider.model.trim()
     }
 
     // 获取当前的自定义服务商列表
@@ -825,7 +1180,7 @@ const saveCustomProvider = async () => {
     
     // 检查是否已存在同名服务商
     if (customProviders.some(p => p.name === newProvider.name)) {
-      ElMessage.error('已存在同名服务商');
+      showError('已存在同名服务商');
       return;
     }
     
@@ -838,7 +1193,7 @@ const saveCustomProvider = async () => {
     // 保存全局配置
     const globalConfig = {
       provider: aiConfig.provider,
-      customProviders: customProviders
+      customProviders
     }
     
     // 使用新的saveGlobalConfig方法保存
@@ -849,10 +1204,10 @@ const saveCustomProvider = async () => {
     
     // 关闭弹窗
     closeCustomProviderModal()
-    ElMessage.success('自定义服务商添加成功')
+    showSuccess('自定义服务商添加成功')
   } catch (error) {
     console.error('保存自定义服务商失败:', error)
-    ElMessage.error('保存自定义服务商失败: ' + (error.message || '未知错误'))
+    showError(`保存自定义服务商失败: ${  error instanceof Error ? error.message : '未知错误'}`)
   }
 }
 
@@ -865,7 +1220,8 @@ const closePromptConfigModal = () => {
     }).then(() => {
       // 放弃修改，重置临时配置
       Object.keys(promptConfig).forEach(key => {
-        tempPromptConfig[key] = promptConfig[key]
+        const typedKey = key as keyof PromptConfig
+        tempPromptConfig[typedKey] = promptConfig[typedKey]
       })
       showPromptConfigModal.value = false
     }).catch(() => {
@@ -883,7 +1239,7 @@ const loadPromptConfig = async () => {
     Object.assign(promptConfig, config)
   } catch (error) {
     console.error('加载提示词配置失败:', error)
-    ElMessage.error(error.message || '加载提示词配置失败')
+    showError(error instanceof Error ? error.message : '加载提示词配置失败')
 
   }
 }
@@ -892,15 +1248,16 @@ const savePromptConfig = async () => {
   try {
     // 将临时配置同步到正式配置
     Object.keys(promptConfig).forEach(key => {
-      promptConfig[key] = tempPromptConfig[key]
+      const typedKey = key as keyof PromptConfig
+      promptConfig[typedKey] = tempPromptConfig[typedKey]
     })
     // 保存到文件
     await PromptConfigService.saveConfig(promptConfig)
     showPromptConfigModal.value = false
-    ElMessage.success('提示词配置已保存')
+    showSuccess('提示词配置已保存')
   } catch (error) {
     console.error('保存提示词配置失败:', error)
-    ElMessage.error(error.message || '保存提示词配置失败')
+    showError(error instanceof Error ? error.message : '保存提示词配置失败')
   }
 }
 
@@ -935,7 +1292,7 @@ const resetToDefault = () => {
  * @param type - 变量类型
  * @param event - 鼠标事件对象
  */
-const insertVariable = (type: string, event: MouseEvent) => {
+const insertVariable = (type: string, _event: MouseEvent) => {
   try {
     // 验证参数
     if (!type || typeof type !== 'string') {
@@ -946,7 +1303,7 @@ const insertVariable = (type: string, event: MouseEvent) => {
     const textarea = lastFocusedTextarea.value || getCurrentTextarea()
     if (!textarea) {
       console.warn('未找到可用的文本区域');
-      ElMessage.error('请先点击一个文本区域');
+      showError('请先点击一个文本区域');
       return;
     }
     
@@ -983,7 +1340,7 @@ const insertVariable = (type: string, event: MouseEvent) => {
         break
       default:
         console.warn('未知的变量类型:', type);
-        ElMessage.warning('未知的变量类型');
+        showWarning('未知的变量类型');
         return;
     }
     
@@ -1016,7 +1373,7 @@ const insertVariable = (type: string, event: MouseEvent) => {
     textarea.selectionEnd = cursorPos + variable.length
   } catch (error) {
     console.error('插入变量失败:', error);
-    ElMessage.error('插入变量时发生错误');
+    showError('插入变量时发生错误');
   }
 }
 
@@ -1048,7 +1405,13 @@ const getCurrentTextarea = (): HTMLTextAreaElement | undefined => {
 <style scoped>
 
 .modal-overlay {
-  @apply fixed inset-0 bg-black bg-opacity-50 z-40;
+  @apply fixed inset-0 bg-black bg-opacity-50;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 9999 !important;
 }
 
 .modal {
@@ -1059,13 +1422,14 @@ const getCurrentTextarea = (): HTMLTextAreaElement | undefined => {
   background-color: white !important;
   border-radius: 0.5rem !important;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-  z-index: 50 !important;
+  z-index: 10000 !important;
   width: 90% !important;
   max-width: 36rem !important;
   overflow: hidden !important;
   display: flex !important;
   flex-direction: column !important;
   max-height: 95vh !important;
+  margin: 0 !important;
 }
 
 .prompt-config-modal {

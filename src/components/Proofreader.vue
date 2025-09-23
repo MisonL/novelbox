@@ -1,31 +1,59 @@
 <template>
-  <div class="proofreader-container" v-if="show">
+  <div
+    v-if="show"
+    class="proofreader-container"
+  >
     <div class="proofreader-header">
-      <h2 class="text-2xl font-bold">章节校对</h2>
-      <button @click="confirmClose" class="close-btn">
+      <h2 class="text-2xl font-bold">
+        章节校对
+      </h2>
+      <button
+        class="close-btn"
+        @click="confirmClose"
+      >
         <span class="icon">×</span>
       </button>
     </div>
     <div class="proofreader-content">
       <div class="content-panel w-3/4">
-        <div class="content-text" ref="contentRef"></div>
+        <div
+          ref="contentRef"
+          class="content-text"
+        />
       </div>
       <div class="errors-panel w-1/4 border-l border-gray-200">
         <div class="errors-list">
-          <div v-if="errors.length === 0" class="no-errors">
+          <div
+            v-if="errors.length === 0"
+            class="no-errors"
+          >
             暂无错误
           </div>
-          <div v-else v-for="(error, index) in errors" 
-               :key="index" 
-               class="error-item"
-               @click="() => selectError(index)">
-            <div class="error-type">{{ error.type }}</div>
-            <div class="error-position">位置：第 {{ error.position.start }} 到 {{ error.position.end }} 个字符</div>
-            <div class="error-content">
-              <div class="original">原文：{{ error.original }}</div>
-              <div class="corrected">修改：{{ error.corrected }}</div>
+          <div
+            v-for="(error, index) in errors"
+            v-else 
+            :key="index" 
+            class="error-item"
+            @click="() => selectError(index)"
+          >
+            <div class="error-type">
+              {{ error.type }}
             </div>
-            <button @click.stop="applyCorrection(index)" class="apply-correction-btn">
+            <div class="error-position">
+              位置：第 {{ error.position.start }} 到 {{ error.position.end }} 个字符
+            </div>
+            <div class="error-content">
+              <div class="original">
+                原文：{{ error.original }}
+              </div>
+              <div class="corrected">
+                修改：{{ error.corrected }}
+              </div>
+            </div>
+            <button
+              class="apply-correction-btn"
+              @click.stop="applyCorrection(index)"
+            >
               应用修正
             </button>
           </div>
@@ -34,13 +62,23 @@
     </div>
     <div class="proofreader-footer">
       <div class="button-container">
-        <button @click="requestProofread" class="proofread-btn" :disabled="isProofreading">
+        <button
+          class="proofread-btn"
+          :disabled="isProofreading"
+          @click="requestProofread"
+        >
           {{ isProofreading ? '校对中...' : '开始校对' }}
         </button>
-        <button @click="saveChanges" class="save-btn">
+        <button
+          class="save-btn"
+          @click="saveChanges"
+        >
           保存修改
         </button>
-        <button @click="confirmClose" class="cancel-btn">
+        <button
+          class="cancel-btn"
+          @click="confirmClose"
+        >
           取消
         </button>
       </div>
@@ -278,7 +316,7 @@ const requestProofread = async () => {
     const aiConfig = await AIConfigService.getCurrentProviderConfig()
     const aiService = new AIService(aiConfig)
 
-    const prompt = await replaceProofreadPromptVariables(contentRef.value.innerText)
+    const prompt = await replaceProofreadPromptVariables(contentRef.value?.innerText || '')
 
     const response = await aiService.generateText(prompt)
     if (response.error) {
@@ -287,8 +325,8 @@ const requestProofread = async () => {
 
     try {
       // 对比原文和校对后的内容
-      const originalText = contentRef.value.innerText
-      const correctedText = response.text
+      const originalText = contentRef.value?.innerText || ''
+      const correctedText = response.text || ''
       
       // 找出差异
       const differences = findDifferences(originalText, correctedText)
@@ -355,19 +393,23 @@ const applyCorrection = (index: number) => {
       if (startNode === endNode) {
         // 特殊处理插入操作
         if (error.position.start === error.position.end) {
+          const text = startNode.textContent || ''
           startNode.textContent = 
-            startNode.textContent.substring(0, startOffset) + 
+            text.substring(0, startOffset) + 
             error.corrected + 
-            startNode.textContent.substring(startOffset)
+            text.substring(startOffset)
         } else {
+          const text = startNode.textContent || ''
           startNode.textContent = 
-            startNode.textContent.substring(0, startOffset) + 
+            text.substring(0, startOffset) + 
             error.corrected + 
-            startNode.textContent.substring(endOffset)
+            text.substring(endOffset)
         }
       } else {
-        startNode.textContent = startNode.textContent.substring(0, startOffset) + error.corrected
-        endNode.textContent = endNode.textContent.substring(endOffset)
+        const startText = startNode.textContent || ''
+        const endText = endNode.textContent || ''
+        startNode.textContent = startText.substring(0, startOffset) + error.corrected
+        endNode.textContent = endText.substring(endOffset)
       }
 
       // 调整其他错误的位置

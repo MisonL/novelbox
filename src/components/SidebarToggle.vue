@@ -4,9 +4,15 @@
       class="toggle-button"
       @click="toggleSidebar"
     >
-      <span class="toggle-text" :class="{ 'active': isChapters }">目录</span>
+      <span
+        class="toggle-text"
+        :class="{ 'active': isChapters }"
+      >目录</span>
       <span class="divider">/</span>
-      <span class="toggle-text" :class="{ 'active': !isChapters }">片段</span>
+      <span
+        class="toggle-text"
+        :class="{ 'active': !isChapters }"
+      >片段</span>
     </button>
   </div>
 </template>

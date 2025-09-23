@@ -2,22 +2,47 @@
   <div class="chapter-tree">
     <div class="header-row">
       <SidebarToggle 
-        initialTab="chapters" 
+        initial-tab="chapters" 
         @toggle="handleToggle" 
       />
       <div class="action-buttons">
-        <el-tooltip content="导出Word" placement="top">
-          <el-button class="action-button" @click="exportWord" circle>
+        <el-tooltip
+          content="导出Word"
+          placement="top"
+        >
+          <el-button
+            class="action-button"
+            circle
+            @click="exportWord"
+          >
             <el-icon>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
-                <path fill="currentColor" d="M19.5 4h-3V2.5A2.5 2.5 0 0 0 14 0H8a2.5 2.5 0 0 0-2.5 2.5V4h-3A1.5 1.5 0 0 0 1 5.5v15A1.5 1.5 0 0 0 2.5 22h17a1.5 1.5 0 0 0 1.5-1.5v-15A1.5 1.5 0 0 0 19.5 4zM7 2.5c0-.3.2-.5.5-.5h7c.3 0 .5.2.5.5V4H7V2.5zm12 17c0 .3-.2.5-.5.5h-15c-.3 0-.5-.2-.5-.5v-12c0-.3.2-.5.5-.5h15c.3 0 .5.2.5.5v12z"/>
-                <path fill="currentColor" d="M12.7 14.9l-1.3-1.3V18c0 .6-.4 1-1 1s-1-.4-1-1v-4.4l-1.3 1.3c-.4.4-1 .4-1.4 0s-.4-1 0-1.4l3-3c.4-.4 1-.4 1.4 0l3 3c.4.4.4 1 0 1.4s-1 .4-1.4 0z"/>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+              >
+                <path
+                  fill="currentColor"
+                  d="M19.5 4h-3V2.5A2.5 2.5 0 0 0 14 0H8a2.5 2.5 0 0 0-2.5 2.5V4h-3A1.5 1.5 0 0 0 1 5.5v15A1.5 1.5 0 0 0 2.5 22h17a1.5 1.5 0 0 0 1.5-1.5v-15A1.5 1.5 0 0 0 19.5 4zM7 2.5c0-.3.2-.5.5-.5h7c.3 0 .5.2.5.5V4H7V2.5zm12 17c0 .3-.2.5-.5.5h-15c-.3 0-.5-.2-.5-.5v-12c0-.3.2-.5.5-.5h15c.3 0 .5.2.5.5v12z"
+                />
+                <path
+                  fill="currentColor"
+                  d="M12.7 14.9l-1.3-1.3V18c0 .6-.4 1-1 1s-1-.4-1-1v-4.4l-1.3 1.3c-.4.4-1 .4-1.4 0s-.4-1 0-1.4l3-3c.4-.4 1-.4 1.4 0l3 3c.4.4.4 1 0 1.4s-1 .4-1.4 0z"
+                />
               </svg>
             </el-icon>
           </el-button>
         </el-tooltip>
-        <el-tooltip content="添加卷" placement="top">
-          <el-button class="action-button" @click="addVolume" circle>
+        <el-tooltip
+          content="添加卷"
+          placement="top"
+        >
+          <el-button
+            class="action-button"
+            circle
+            @click="addVolume"
+          >
             <el-icon><Plus /></el-icon>
           </el-button>
         </el-tooltip>
@@ -37,27 +62,50 @@
             <span v-if="editingNodeId !== data.id">{{ data.title }}</span>
             <el-input
               v-else
+              ref="editInput"
               v-model="data.title"
               size="small"
               @blur="finishEdit(data)"
               @keyup.enter="finishEdit(data)"
-              ref="editInput"
             />
           </div>
           <div class="node-actions">
             <template v-if="editingNodeId !== data.id">
-              <el-tooltip content="添加章节" placement="top" v-if="data.type === 'volume'">
-                <el-button circle size="small" @click="addChapter(data)">
+              <el-tooltip
+                v-if="data.type === 'volume'"
+                content="添加章节"
+                placement="top"
+              >
+                <el-button
+                  circle
+                  size="small"
+                  @click="addChapter(data)"
+                >
                   <el-icon><Plus /></el-icon>
                 </el-button>
               </el-tooltip>
-              <el-tooltip content="重命名" placement="top">
-                <el-button circle size="small" @click="startEdit(data)">
+              <el-tooltip
+                content="重命名"
+                placement="top"
+              >
+                <el-button
+                  circle
+                  size="small"
+                  @click="startEdit(data)"
+                >
                   <el-icon><Edit /></el-icon>
                 </el-button>
               </el-tooltip>
-              <el-tooltip content="删除" placement="top">
-                <el-button circle size="small" type="danger" @click="removeNode(node, data)">
+              <el-tooltip
+                content="删除"
+                placement="top"
+              >
+                <el-button
+                  circle
+                  size="small"
+                  type="danger"
+                  @click="removeNode(node, data)"
+                >
                   <el-icon><Delete /></el-icon>
                 </el-button>
               </el-tooltip>
@@ -427,7 +475,7 @@ const exportWord = async () => {
     ElMessage.success(`文档已导出为: ${fileName}`);
   } catch (error) {
     console.error('导出Word文档失败:', error);
-    ElMessage.error('导出Word文档失败: ' + (error.message || '未知错误'));
+    ElMessage.error(`导出Word文档失败: ${  error instanceof Error ? error.message : '未知错误'}`);
   }
 }
 </script>

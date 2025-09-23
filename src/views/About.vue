@@ -1,17 +1,30 @@
 <template>
   <div class="about-page">
-    <div class="close-button" @click="$emit('close')">×</div>
+    <div
+      class="close-button"
+      @click="$emit('close')"
+    >
+      ×
+    </div>
     <div class="about-header">
-      <img src="/icon.ico" alt="NovelBox Logo" class="logo" />
+      <img
+        src="/icon.ico"
+        alt="NovelBox Logo"
+        class="logo"
+      >
       <h1>NovelBox</h1>
       <p>版本：{{ version }}</p>
       <p>一个专业的小说写作工具</p>
       <p>反馈邮箱：novelbox.feedback@gmail.com</p>
       <p>QQ群：461287820</p>
-      <p class="license">采用 GNU 通用公共许可证 v3.0（GPL-3.0）</p>
+      <p class="license">
+        采用 GNU 通用公共许可证 v3.0（GPL-3.0）
+      </p>
     </div>
     <div class="about-actions">
-      <button @click="checkUpdate">检查更新</button>
+      <button @click="checkUpdate">
+        检查更新
+      </button>
     </div>
   </div>
 </template>

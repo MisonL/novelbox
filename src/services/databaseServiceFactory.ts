@@ -48,7 +48,7 @@ export class DatabaseServiceFactory {
   static getSupportedDatabases(): { type: DatabaseType; name: string; description: string }[] {
     const databases = [
       {
-        type: 'local',
+        type: 'local' as DatabaseType,
         name: '本地存储',
         description: '使用浏览器本地存储，适合个人使用'
       }
@@ -58,22 +58,22 @@ export class DatabaseServiceFactory {
     if (!isWebEnvironment) {
       databases.push(
         {
-          type: 'mongodb',
+          type: 'mongodb' as DatabaseType,
           name: 'MongoDB',
           description: '支持MongoDB Atlas免费层和本地MongoDB'
         },
         {
-          type: 'mysql',
+          type: 'mysql' as DatabaseType,
           name: 'MySQL',
           description: '支持MySQL数据库'
         },
         {
-          type: 'sqlserver',
+          type: 'sqlserver' as DatabaseType,
           name: 'SQL Server',
           description: '支持Microsoft SQL Server'
         },
         {
-          type: 'sqlite',
+          type: 'sqlite' as DatabaseType,
           name: 'SQLite',
           description: '轻量级文件数据库'
         }

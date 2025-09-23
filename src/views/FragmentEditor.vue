@@ -1,62 +1,130 @@
 <template>
   <div class="fragment-editor-page">
     <!-- 窗口控制区 - 可拖动，降低高度 -->
-    <div class="window-drag-area" @mousedown="startDrag">
+    <div
+      class="window-drag-area"
+      @mousedown="startDrag"
+    >
       <!-- 标题区域，不可拖动 -->
-      <div class="window-title" @mousedown.stop @click="startTitleEdit" v-if="!isEditingTitle" ref="titleRef">
+      <div
+        v-if="!isEditingTitle"
+        ref="titleRef"
+        class="window-title"
+        @mousedown.stop
+        @click="startTitleEdit"
+      >
         {{ fragmentTitle || '新片段' }}{{ isGenerating ? '（生成中...）' : (fragment.wasStopped ? '（已停止）' : '') }}
       </div>
-      <div class="title-edit" v-else>
-        <el-input v-model="editingTitle" size="small" @blur="saveTitleEdit" @keyup.enter="saveTitleEdit"
-          @keyup.esc="cancelTitleEdit" ref="titleInputRef" placeholder="输入标题..." />
+      <div
+        v-else
+        class="title-edit"
+      >
+        <el-input
+          ref="titleInputRef"
+          v-model="editingTitle"
+          size="small"
+          placeholder="输入标题..."
+          @blur="saveTitleEdit"
+          @keyup.enter="saveTitleEdit"
+          @keyup.esc="cancelTitleEdit"
+        />
       </div>
       <div class="window-controls">
-        <button class="close-btn" @click="closeWindow">×</button>
+        <button
+          class="close-btn"
+          @click="closeWindow"
+        >
+          ×
+        </button>
       </div>
     </div>
     <!-- 内容编辑区 -->
     <div class="editor-content">
       <div class="chat-container">
-        <div class="message-list" v-if="messages.length > 0" ref="messageListRef">
-          <div v-for="(message, index) in messages" :key="index"
-            :class="['message-item', message.role === 'user' ? 'user-message' : 'ai-message']">
+        <div
+          v-if="messages.length > 0"
+          ref="messageListRef"
+          class="message-list"
+        >
+          <div
+            v-for="(message, index) in messages"
+            :key="index"
+            :class="['message-item', message.role === 'user' ? 'user-message' : 'ai-message']"
+          >
             <div class="message-avatar">
-              <div class="avatar-icon" :class="message.role">
-                <i class="el-icon" v-if="message.role === 'user'">
-                  <svg viewBox="0 0 1024 1024" width="16" height="16">
-                    <path fill="currentColor"
-                      d="M858.5 763.6c-18.9-44.8-46.1-85-80.6-119.5-34.5-34.5-74.7-61.6-119.5-80.6-0.4-0.2-0.8-0.3-1.2-0.5C719.5 518 760 444.7 760 362c0-137-111-248-248-248S264 225 264 362c0 82.7 40.5 156 102.8 201.1-0.4 0.2-0.8 0.3-1.2 0.5-44.8 18.9-85 46-119.5 80.6-34.5 34.5-61.6 74.7-80.6 119.5C146.9 807.5 137 854 136 901.8c-0.1 4.5 3.5 8.2 8 8.2h60c4.4 0 7.9-3.5 8-7.8 2-77.2 33-149.5 87.8-204.3 56.7-56.7 132-87.9 212.2-87.9s155.5 31.2 212.2 87.9C779 752.7 810 825 812 902.2c0.1 4.4 3.6 7.8 8 7.8h60c4.5 0 8.1-3.7 8-8.2-1-47.8-10.9-94.3-29.5-138.2z">
-                    </path>
+              <div
+                class="avatar-icon"
+                :class="message.role"
+              >
+                <i
+                  v-if="message.role === 'user'"
+                  class="el-icon"
+                >
+                  <svg
+                    viewBox="0 0 1024 1024"
+                    width="16"
+                    height="16"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M858.5 763.6c-18.9-44.8-46.1-85-80.6-119.5-34.5-34.5-74.7-61.6-119.5-80.6-0.4-0.2-0.8-0.3-1.2-0.5C719.5 518 760 444.7 760 362c0-137-111-248-248-248S264 225 264 362c0 82.7 40.5 156 102.8 201.1-0.4 0.2-0.8 0.3-1.2 0.5-44.8 18.9-85 46-119.5 80.6-34.5 34.5-61.6 74.7-80.6 119.5C146.9 807.5 137 854 136 901.8c-0.1 4.5 3.5 8.2 8 8.2h60c4.4 0 7.9-3.5 8-7.8 2-77.2 33-149.5 87.8-204.3 56.7-56.7 132-87.9 212.2-87.9s155.5 31.2 212.2 87.9C779 752.7 810 825 812 902.2c0.1 4.4 3.6 7.8 8 7.8h60c4.5 0 8.1-3.7 8-8.2-1-47.8-10.9-94.3-29.5-138.2z"
+                    />
                   </svg>
                 </i>
-                <i class="el-icon" v-else>
-                  <svg viewBox="0 0 1024 1024" width="16" height="16">
-                    <path fill="currentColor"
-                      d="M288 512a224 224 0 1 0 448 0 224 224 0 1 0-448 0z m494.33 320L640.16 704.11A288 288 0 0 1 512 768c-69.09 0-136.15-24.1-189.57-68.11l-142.05 127.87A32 32 0 0 1 96 813.18V96a32 32 0 0 1 32-32h768a32 32 0 0 1 32 32v717.22a32 32 0 0 1-45.67 28.78z">
-                    </path>
+                <i
+                  v-else
+                  class="el-icon"
+                >
+                  <svg
+                    viewBox="0 0 1024 1024"
+                    width="16"
+                    height="16"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M288 512a224 224 0 1 0 448 0 224 224 0 1 0-448 0z m494.33 320L640.16 704.11A288 288 0 0 1 512 768c-69.09 0-136.15-24.1-189.57-68.11l-142.05 127.87A32 32 0 0 1 96 813.18V96a32 32 0 0 1 32-32h768a32 32 0 0 1 32 32v717.22a32 32 0 0 1-45.67 28.78z"
+                    />
                   </svg>
                 </i>
               </div>
             </div>
             <div class="message-content">
               <!-- 显示模式 -->
-              <div v-if="!message.isEditing" class="message-text"
-                   :class="{
-                     'collapsed': message.role === 'user' && isMessageCollapsed(message.content) && !message.expanded,
-                     'generating': message.role === 'assistant' && isGeneratingMessage(message.content)
-                   }">
-                <div v-if="message.role === 'user' && isMessageCollapsed(message.content)" class="message-content-wrapper">
-                  <div class="message-preview" v-if="!message.expanded">
+              <div
+                v-if="!message.isEditing"
+                class="message-text"
+                :class="{
+                  'collapsed': message.role === 'user' && isMessageCollapsed(message.content) && !message.expanded,
+                  'generating': message.role === 'assistant' && isGeneratingMessage(message.content)
+                }"
+              >
+                <div
+                  v-if="message.role === 'user' && isMessageCollapsed(message.content)"
+                  class="message-content-wrapper"
+                >
+                  <div
+                    v-if="!message.expanded"
+                    class="message-preview"
+                  >
                     {{ getMessagePreview(message.content) }}
-                    <button class="expand-btn" @click="toggleMessageExpansion(index)">
-                      <i class="el-icon-arrow-down"></i>
+                    <button
+                      class="expand-btn"
+                      @click="toggleMessageExpansion(index)"
+                    >
+                      <i class="el-icon-arrow-down" />
                       展开
                     </button>
                   </div>
-                  <div class="message-full" v-else>
+                  <div
+                    v-else
+                    class="message-full"
+                  >
                     {{ message.content }}
-                    <button class="collapse-btn" @click="toggleMessageExpansion(index)">
-                      <i class="el-icon-arrow-up"></i>
+                    <button
+                      class="collapse-btn"
+                      @click="toggleMessageExpansion(index)"
+                    >
+                      <i class="el-icon-arrow-up" />
                       收起
                     </button>
                   </div>
@@ -64,61 +132,137 @@
                 <div v-else>
                   {{ message.content }}
                   <!-- 为正在生成的消息添加动画点 -->
-                  <span v-if="message.role === 'assistant' && isGeneratingMessage(message.content)" class="generating-dots">
-                    <span class="dot"></span>
-                    <span class="dot"></span>
-                    <span class="dot"></span>
+                  <span
+                    v-if="message.role === 'assistant' && isGeneratingMessage(message.content)"
+                    class="generating-dots"
+                  >
+                    <span class="dot" />
+                    <span class="dot" />
+                    <span class="dot" />
                   </span>
                 </div>
               </div>
               <!-- 编辑模式 -->
-              <div v-if="message.isEditing" class="message-edit">
+              <div
+                v-if="message.isEditing"
+                class="message-edit"
+              >
                 <textarea
+                  ref="editTextarea"
                   v-model="message.editingContent"
                   class="edit-textarea"
                   rows="5"
                   placeholder="编辑消息内容..."
                   @keydown.ctrl.enter.prevent="saveMessageEdit(index)"
                   @keydown.esc.prevent="cancelMessageEdit(index)"
-                  ref="editTextarea"
-                ></textarea>
+                />
                 <div class="edit-actions">
-                  <el-button size="small" type="primary" @click="saveMessageEdit(index)">确定</el-button>
-                  <el-button size="small" @click="cancelMessageEdit(index)">取消</el-button>
+                  <el-button
+                    size="small"
+                    type="primary"
+                    @click="saveMessageEdit(index)"
+                  >
+                    确定
+                  </el-button>
+                  <el-button
+                    size="small"
+                    @click="cancelMessageEdit(index)"
+                  >
+                    取消
+                  </el-button>
                 </div>
               </div>
               <div class="message-actions">
-                <button class="action-btn" @click="handleRegenerateClick(index)" v-if="message.role === 'assistant'"
-                        :title="isSending ? '点击停止生成' : '重新生成'"
-                        :class="{ 'regenerating': isSending }">
-                  <svg v-if="!isSending" viewBox="0 0 1024 1024" width="14" height="14">
-                    <path fill="currentColor" d="M909.1 209.3l-56.4 44.1C775.8 155.1 656.2 92 521.9 92 290 92 102.3 279.5 102 511.5 101.7 743.7 289.8 932 521.9 932c181.3 0 335.8-115 394.6-276.1 1.5-4.2-0.7-8.9-4.9-10.3l-56.7-19.5c-4.1-1.4-8.6 0.7-10.1 4.8-1.8 5-3.8 10-5.9 14.9-17.3 41-42.1 77.8-73.7 109.4-31.6 31.6-68.4 56.4-109.3 73.8-42.3 17.9-87.4 27-133.8 27-46.5 0-91.5-9.1-133.8-27-40.9-17.3-77.7-42.1-109.3-73.8-31.6-31.6-56.4-68.4-73.7-109.4-17.9-42.4-27-87.4-27-133.9s9.1-91.5 27-133.9c17.3-41 42.1-77.8 73.7-109.4 31.6-31.6 68.4-56.4 109.3-73.8 42.3-17.9 87.4-27 133.8-27 46.5 0 91.5 9.1 133.8 27 40.9 17.3 77.7 42.1 109.3 73.8 9.9 9.9 19.2 20.4 27.8 31.4l-60.2 47c-5.3 4.1-3.5 12.5 3 14.1l175.6 43c5 1.2 9.9-2.6 9.9-7.7l0.8-180.9c-0.1-6.6-7.8-10.3-13-6.2z"></path>
+                <button
+                  v-if="message.role === 'assistant'"
+                  class="action-btn"
+                  :title="isSending ? '点击停止生成' : '重新生成'"
+                  :class="{ 'regenerating': isSending }"
+                  @click="handleRegenerateClick(index)"
+                >
+                  <svg
+                    v-if="!isSending"
+                    viewBox="0 0 1024 1024"
+                    width="14"
+                    height="14"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M909.1 209.3l-56.4 44.1C775.8 155.1 656.2 92 521.9 92 290 92 102.3 279.5 102 511.5 101.7 743.7 289.8 932 521.9 932c181.3 0 335.8-115 394.6-276.1 1.5-4.2-0.7-8.9-4.9-10.3l-56.7-19.5c-4.1-1.4-8.6 0.7-10.1 4.8-1.8 5-3.8 10-5.9 14.9-17.3 41-42.1 77.8-73.7 109.4-31.6 31.6-68.4 56.4-109.3 73.8-42.3 17.9-87.4 27-133.8 27-46.5 0-91.5-9.1-133.8-27-40.9-17.3-77.7-42.1-109.3-73.8-31.6-31.6-56.4-68.4-73.7-109.4-17.9-42.4-27-87.4-27-133.9s9.1-91.5 27-133.9c17.3-41 42.1-77.8 73.7-109.4 31.6-31.6 68.4-56.4 109.3-73.8 42.3-17.9 87.4-27 133.8-27 46.5 0 91.5 9.1 133.8 27 40.9 17.3 77.7 42.1 109.3 73.8 9.9 9.9 19.2 20.4 27.8 31.4l-60.2 47c-5.3 4.1-3.5 12.5 3 14.1l175.6 43c5 1.2 9.9-2.6 9.9-7.7l0.8-180.9c-0.1-6.6-7.8-10.3-13-6.2z"
+                    />
                   </svg>
-                  <svg v-else viewBox="0 0 1024 1024" width="14" height="14" class="loading-icon">
-                    <path fill="currentColor" d="M512 1024c-69.1 0-136.2-13.5-199.3-40.2C251.7 958 197 921 150.7 874.3S46 748.3 21.8 685.2C-5 622.1-5 553.9 21.8 490.8S46 359.7 92.3 313.4 225.7 259 288.8 234.8c63.1-24.2 130.2-24.2 193.3 0 63.1 24.2 120.5 61.2 166.8 107.5S709 359.7 733.2 422.8c24.2 63.1 24.2 130.2 0 193.3-24.2 63.1-61.2 120.5-107.5 166.8S508.1 843 445 867.2c-63.1 24.2-130.2 24.2-193.3 0-63.1-24.2-120.5-61.2-166.8-107.5S25 641.3 0.8 578.2c-24.2-63.1-24.2-130.2 0-193.3 24.2-63.1 61.2-120.5 107.5-166.8S226.7 158 289.8 133.8c63.1-24.2 130.2-24.2 193.3 0 63.1 24.2 120.5 61.2 166.8 107.5S710 359.7 734.2 422.8c24.2 63.1 24.2 130.2 0 193.3-24.2 63.1-61.2 120.5-107.5 166.8S508.1 843 445 867.2c-63.1 24.2-130.2 24.2-193.3 0z"></path>
+                  <svg
+                    v-else
+                    viewBox="0 0 1024 1024"
+                    width="14"
+                    height="14"
+                    class="loading-icon"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M512 1024c-69.1 0-136.2-13.5-199.3-40.2C251.7 958 197 921 150.7 874.3S46 748.3 21.8 685.2C-5 622.1-5 553.9 21.8 490.8S46 359.7 92.3 313.4 225.7 259 288.8 234.8c63.1-24.2 130.2-24.2 193.3 0 63.1 24.2 120.5 61.2 166.8 107.5S709 359.7 733.2 422.8c24.2 63.1 24.2 130.2 0 193.3-24.2 63.1-61.2 120.5-107.5 166.8S508.1 843 445 867.2c-63.1 24.2-130.2 24.2-193.3 0-63.1-24.2-120.5-61.2-166.8-107.5S25 641.3 0.8 578.2c-24.2-63.1-24.2-130.2 0-193.3 24.2-63.1 61.2-120.5 107.5-166.8S226.7 158 289.8 133.8c63.1-24.2 130.2-24.2 193.3 0 63.1 24.2 120.5 61.2 166.8 107.5S710 359.7 734.2 422.8c24.2 63.1 24.2 130.2 0 193.3-24.2 63.1-61.2 120.5-107.5 166.8S508.1 843 445 867.2c-63.1 24.2-130.2 24.2-193.3 0z"
+                    />
                   </svg>
                 </button>
-                <button class="action-btn" @click="editMessage(index)" title="编辑">
-                  <svg viewBox="0 0 1024 1024" width="14" height="14">
-                    <path fill="currentColor" d="M880 836H144c-17.7 0-32 14.3-32 32v36c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-36c0-17.7-14.3-32-32-32zm-622.3-84c2 0 4-.2 6-.5L431.9 722c2-.4 3.9-1.3 5.3-2.8l423.9-423.9c3.9-3.9 3.9-10.2 0-14.1L694.9 114.9c-1.9-1.9-4.4-2.9-7.1-2.9s-5.2 1-7.1 2.9L256.8 538.8c-1.5 1.5-2.4 3.3-2.8 5.3l-29.5 168.2c-1.9 11.1 1.5 21.9 9.4 29.8 6.6 6.4 14.9 9.9 23.8 9.9z"></path>
+                <button
+                  class="action-btn"
+                  title="编辑"
+                  @click="editMessage(index)"
+                >
+                  <svg
+                    viewBox="0 0 1024 1024"
+                    width="14"
+                    height="14"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M880 836H144c-17.7 0-32 14.3-32 32v36c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-36c0-17.7-14.3-32-32-32zm-622.3-84c2 0 4-.2 6-.5L431.9 722c2-.4 3.9-1.3 5.3-2.8l423.9-423.9c3.9-3.9 3.9-10.2 0-14.1L694.9 114.9c-1.9-1.9-4.4-2.9-7.1-2.9s-5.2 1-7.1 2.9L256.8 538.8c-1.5 1.5-2.4 3.3-2.8 5.3l-29.5 168.2c-1.9 11.1 1.5 21.9 9.4 29.8 6.6 6.4 14.9 9.9 23.8 9.9z"
+                    />
                   </svg>
                 </button>
-                <button class="action-btn" @click="copyMessage(message.content)" title="复制">
-                  <svg viewBox="0 0 1024 1024" width="14" height="14">
-                    <path fill="currentColor" d="M832 64H296c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h496v688c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8V96c0-17.7-14.3-32-32-32zM704 192H192c-17.7 0-32 14.3-32 32v530.7c0 8.5 3.4 16.6 9.4 22.6l173.3 173.3c2.2 2.2 4.7 4 7.4 5.5v1.9h4.2c3.5 1.3 7.2 2 11 2H704c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32zM350 856.2L263.9 770H350v86.2zM664 888H414V746c0-22.1-17.9-40-40-40H232V264h432v624z"></path>
+                <button
+                  class="action-btn"
+                  title="复制"
+                  @click="copyMessage(message.content)"
+                >
+                  <svg
+                    viewBox="0 0 1024 1024"
+                    width="14"
+                    height="14"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M832 64H296c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h496v688c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8V96c0-17.7-14.3-32-32-32zM704 192H192c-17.7 0-32 14.3-32 32v530.7c0 8.5 3.4 16.6 9.4 22.6l173.3 173.3c2.2 2.2 4.7 4 7.4 5.5v1.9h4.2c3.5 1.3 7.2 2 11 2H704c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32zM350 856.2L263.9 770H350v86.2zM664 888H414V746c0-22.1-17.9-40-40-40H232V264h432v624z"
+                    />
                   </svg>
                 </button>
-                <button class="action-btn" @click="deleteMessage(index)" title="删除">
-                  <svg viewBox="0 0 1024 1024" width="14" height="14">
-                    <path fill="currentColor" d="M360 184h-8c4.4 0 8-3.6 8-8v8h304v-8c0 4.4 3.6 8 8 8h-8v72h72v-80c0-35.3-28.7-64-64-64H352c-35.3 0-64 28.7-64 64v80h72v-72zm504 72H160c-17.7 0-32 14.3-32 32v32c0 4.4 3.6 8 8 8h60.4l24.7 523c1.6 34.1 29.8 61 63.9 61h454c34.2 0 62.3-26.8 63.9-61l24.7-523H888c4.4 0 8-3.6 8-8v-32c0-17.7-14.3-32-32-32zM731.3 840H292.7l-24.2-512h487l-24.2 512z"></path>
+                <button
+                  class="action-btn"
+                  title="删除"
+                  @click="deleteMessage(index)"
+                >
+                  <svg
+                    viewBox="0 0 1024 1024"
+                    width="14"
+                    height="14"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M360 184h-8c4.4 0 8-3.6 8-8v8h304v-8c0 4.4 3.6 8 8 8h-8v72h72v-80c0-35.3-28.7-64-64-64H352c-35.3 0-64 28.7-64 64v80h72v-72zm504 72H160c-17.7 0-32 14.3-32 32v32c0 4.4 3.6 8 8 8h60.4l24.7 523c1.6 34.1 29.8 61 63.9 61h454c34.2 0 62.3-26.8 63.9-61l24.7-523H888c4.4 0 8-3.6 8-8v-32c0-17.7-14.3-32-32-32zM731.3 840H292.7l-24.2-512h487l-24.2 512z"
+                    />
                   </svg>
                 </button>
               </div>
             </div>
           </div>
         </div>
-        <div class="empty-chat" v-else>
-          <div class="empty-message">暂无消息，开始与AI对话吧</div>
+        <div
+          v-else
+          class="empty-chat"
+        >
+          <div class="empty-message">
+            暂无消息，开始与AI对话吧
+          </div>
         </div>
       </div>
     </div>
@@ -130,34 +274,71 @@
           v-model="chatInput"
           placeholder="与AI对话... (Enter换行，Ctrl+Enter发送)"
           size="small"
-          @keydown="handleChatInputKeydown"
           class="chat-input"
           type="textarea"
           :autosize="{ minRows: 1, maxRows: 4 }"
+          @keydown="handleChatInputKeydown"
         />
       </div>
       <el-button
         class="send-button"
         circle
         :type="isAnyGenerating ? 'danger' : 'primary'"
-        @click="handleSendButtonClick"
         :title="isAnyGenerating ? '点击停止生成' : '发送消息'"
-        :class="{ 'stop-mode': isAnyGenerating }">
+        :class="{ 'stop-mode': isAnyGenerating }"
+        @click="handleSendButtonClick"
+      >
         <!-- 发送图标 -->
-        <svg v-if="!isAnyGenerating" class="custom-send-icon" viewBox="0 0 24 24" width="16" height="16">
-          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"></path>
+        <svg
+          v-if="!isAnyGenerating"
+          class="custom-send-icon"
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+        >
+          <path
+            d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"
+            fill="currentColor"
+          />
         </svg>
         <!-- 停止图标 -->
-        <svg v-else class="custom-stop-icon" viewBox="0 0 24 24" width="14" height="14">
-          <path d="M6 6h12v12H6z" fill="currentColor"></path>
+        <svg
+          v-else
+          class="custom-stop-icon"
+          viewBox="0 0 24 24"
+          width="14"
+          height="14"
+        >
+          <path
+            d="M6 6h12v12H6z"
+            fill="currentColor"
+          />
         </svg>
       </el-button>
     </div>
 
     <div class="editor-footer">
-      <el-button type="success" size="small" @click="insertToEditor">插入原文</el-button>
-      <el-button type="warning" size="small" @click="replaceInEditor">替换原文</el-button>
-      <el-button type="primary" size="small" @click="saveFragment">保存</el-button>
+      <el-button
+        type="success"
+        size="small"
+        @click="insertToEditor"
+      >
+        插入原文
+      </el-button>
+      <el-button
+        type="warning"
+        size="small"
+        @click="replaceInEditor"
+      >
+        替换原文
+      </el-button>
+      <el-button
+        type="primary"
+        size="small"
+        @click="saveFragment"
+      >
+        保存
+      </el-button>
     </div>
   </div>
 </template>
@@ -284,7 +465,7 @@ const parseContentToMessages = (content: string) => {
       }
     } else if (currentMessage && line) {
       // 继续添加到当前消息
-      currentMessage.content += '\n' + line
+      currentMessage.content += `\n${  line}`
     } else if (line && !currentMessage) {
       // 没有前缀的内容默认为AI消息
       currentMessage = {
@@ -435,7 +616,7 @@ const sendChatMessage = async () => {
       timestamp: new Date()
     })
 
-    let messagesForAI = messages.value.map(msg => ({
+    const messagesForAI = messages.value.map(msg => ({
       role: msg.role,
       content: msg.content
     }));
@@ -540,7 +721,7 @@ const sendChatMessage = async () => {
     }
   } catch (error) {
     console.error('发送消息失败:', error)
-    ElMessage.error('发送失败' + error)
+    ElMessage.error(`发送失败${  error}`)
     isSending.value = false
   }
 }
@@ -569,7 +750,7 @@ const saveFragment = async () => {
     if (result.success) {
       ElMessage.success('内容已保存')
     } else {
-      ElMessage.error(`保存失败: ${result.error?.message || '未知错误'}`)
+      ElMessage.error(`保存失败: ${result.message || '未知错误'}`)
     }
   } catch (error) {
     console.error('保存片段失败:', error)
@@ -822,7 +1003,7 @@ const getMessagePreview = (content: string) => {
   if (content.length <= maxLength) {
     return content;
   }
-  return content.substring(0, maxLength) + '...';
+  return `${content.substring(0, maxLength)  }...`;
 }
 
 // 切换消息展开/收起状态
@@ -934,7 +1115,7 @@ const regenerateMessage = async (index: number) => {
     messages.value = contextMessages;
 
     // 准备发送给AI的消息
-    let messagesForAI = contextMessages.map(msg => ({
+    const messagesForAI = contextMessages.map(msg => ({
       role: msg.role,
       content: msg.content
     }));
@@ -1041,7 +1222,7 @@ const regenerateMessage = async (index: number) => {
       return;
     }
     console.error('重新生成消息失败:', error);
-    ElMessage.error('重新生成失败: ' + (error instanceof Error ? error.message : '未知错误'));
+    ElMessage.error(`重新生成失败: ${  error instanceof Error ? error.message : '未知错误'}`);
     isSending.value = false;
     currentRegenerateTask.value = null;
   }
@@ -1160,7 +1341,7 @@ onMounted(async () => {
       // 主动请求片段数据
       await window.electronAPI.requestFragmentData(result.id);
     } else {
-      console.error('获取窗口ID失败:', result.message);
+      console.error('获取窗口ID失败: 未知错误');
     }
   } catch (error) {
     console.error('请求片段数据失败:', error);
@@ -1194,30 +1375,33 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: transparent;
-  /* 完全透明 */
+  background-color: #ffffff;
+  /* 改为白色背景，确保可见性 */
   position: relative;
   border-radius: 8px;
   /* 整体圆角 */
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  /* 添加整体阴影 */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  /* 增强阴影效果 */
+  border: 1px solid #e0e0e0;
+  /* 添加边框 */
 }
 
 /* 实际内容容器，这个才是真正的圆角矩形 */
 .window-drag-area {
-  height: 28px;
+  height: 32px;
   -webkit-app-region: drag;
-  background-color: #f5f7fa;
+  background-color: #f8f9fa;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 8px;
+  padding: 0 12px;
   border-top-left-radius: 8px;
   /* 顶部左侧圆角 */
   border-top-right-radius: 8px;
   /* 顶部右侧圆角 */
-  border: 1px solid rgba(230, 230, 230, 0.8);
-  border-bottom: none;
+  border: 1px solid #dee2e6;
+  border-bottom: 1px solid #e9ecef;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .window-title {
@@ -1273,24 +1457,28 @@ onUnmounted(() => {
 }
 
 .close-btn {
-  background: none;
+  background: #ff4757;
   border: none;
-  font-size: 16px;
-  color: #666;
+  font-size: 14px;
+  color: white;
   cursor: pointer;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   margin: 0;
+  font-weight: bold;
+  line-height: 1;
+  transition: all 0.2s ease;
 }
 
 .close-btn:hover {
-  background-color: #ff4d4f;
+  background-color: #ff3838;
   color: white;
+  transform: scale(1.1);
 }
 
 .editor-content {

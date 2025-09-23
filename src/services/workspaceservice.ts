@@ -1,4 +1,4 @@
-import { WorkspaceError } from '../errors/workspaceError';
+// import { WorkspaceError } from '../errors/workspaceError';
 
 export class WorkspaceService {
   static getWorkspacePath(): string {

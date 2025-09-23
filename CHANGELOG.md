@@ -124,7 +124,7 @@ wine release/NovelBox-win32-x64/NovelBox.exe
 - Vue 3 + TypeScript架构
 - Electron桌面应用
 - Docker容器化
-- 多AI模型集成（OpenAI, Anthropic, Google, DeepSeek, MiniMax）
+- 多AI模型集成（OpenAI, Anthropic, Google, DeepSeek, MiniMax, Ollama, LM Studio）
 - DOCX导出功能
 - 实时字数统计
 

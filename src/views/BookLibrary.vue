@@ -1,113 +1,259 @@
 <template>
   <div class="book-library-page">
-    <AIConfigModal v-model:showAIConfigModal="showAIConfigModal" />
+    <AIConfigModal v-model:show-a-i-config-modal="showAIConfigModal" />
     <div class="library-header">
       <div class="header-left">
-        <button @click="showAIConfigModal = true" class="config-btn">
+        <button
+          class="config-btn"
+          @click="showAIConfigModal = true"
+        >
           <span class="icon">⚙️</span> AI配置
         </button>
-        <button @click="openSettings" class="config-btn">
+        <button
+          class="config-btn"
+          @click="openSettings"
+        >
           <span class="icon">🔧</span> 系统设置
         </button>
       </div>
-      <h1 class="page-title">我的书库</h1>
+      <h1 class="page-title">
+        我的书库
+      </h1>
       <div class="header-right">
-        <button @click="showCreateModal = true" class="create-btn">
+        <button
+          class="create-btn"
+          @click="showCreateModal = true"
+        >
           <span class="icon">+</span> 创建新书
         </button>
       </div>
     </div>
 
-    <div class="books-container" v-if="books.length > 0">
-      <div v-for="book in books" :key="book.id" class="book-card">
+    <div
+      v-if="books.length > 0"
+      class="books-container"
+    >
+      <div
+        v-for="book in books"
+        :key="book.id"
+        class="book-card"
+      >
         <div class="book-info">
-          <h2 class="book-title">{{ book.title }}</h2>
-          <p class="book-desc">{{ book.description || '暂无简介' }}</p>
-          <p class="book-meta">最后编辑: {{ formatDate(book.lastEdited) }}</p>
+          <h2 class="book-title">
+            {{ book.title }}
+          </h2>
+          <p class="book-desc">
+            {{ book.description || '暂无简介' }}
+          </p>
+          <p class="book-meta">
+            最后编辑: {{ formatDate(book.lastEdited) }}
+          </p>
         </div>
         <div class="book-actions">
-          <button @click="openBook(book)" class="open-btn">打开</button>
-          <button @click="editBook(book)" class="edit-btn">编辑</button>
-          <button @click="confirmDelete(book)" class="delete-btn">删除</button>
+          <button
+            class="open-btn"
+            @click="openBook(book)"
+          >
+            打开
+          </button>
+          <button
+            class="edit-btn"
+            @click="editBook(book)"
+          >
+            编辑
+          </button>
+          <button
+            class="delete-btn"
+            @click="confirmDelete(book)"
+          >
+            删除
+          </button>
         </div>
       </div>
     </div>
 
-    <div class="empty-state" v-else>
-      <div class="empty-icon">📚</div>
-      <p class="empty-text">您的书库还没有书籍</p>
-      <p class="empty-subtext">点击"创建新书"按钮开始您的创作之旅</p>
+    <div
+      v-else
+      class="empty-state"
+    >
+      <div class="empty-icon">
+        📚
+      </div>
+      <p class="empty-text">
+        您的书库还没有书籍
+      </p>
+      <p class="empty-subtext">
+        点击"创建新书"按钮开始您的创作之旅
+      </p>
     </div>
 
     <!-- 创建书籍对话框 -->
-    <div class="modal-overlay" v-if="showCreateModal" @click="closeModal"></div>
-    <div class="modal" v-if="showCreateModal">
+    <div
+      v-if="showCreateModal"
+      class="modal-overlay"
+      @click="closeModal"
+    />
+    <div
+      v-if="showCreateModal"
+      class="modal"
+    >
       <div class="modal-header">
-        <h2 class="modal-title">{{ editingBook ? '编辑书籍' : '创建新书' }}</h2>
-        <button @click="closeModal" class="modal-close">×</button>
+        <h2 class="modal-title">
+          {{ editingBook ? '编辑书籍' : '创建新书' }}
+        </h2>
+        <button
+          class="modal-close"
+          @click="closeModal"
+        >
+          ×
+        </button>
       </div>
       <div class="modal-body">
         <div class="form-group">
           <label for="bookTitle">书名</label>
-          <input type="text" id="bookTitle" v-model="newBook.title" placeholder="请输入书名" class="form-input" />
+          <input
+            id="bookTitle"
+            v-model="newBook.title"
+            type="text"
+            placeholder="请输入书名"
+            class="form-input"
+          >
         </div>
         <div class="form-group">
           <label for="bookDesc">简介</label>
           <div class="desc-input-group">
-            <textarea id="bookDesc" v-model="newBook.description" placeholder="请输入书籍简介"
-              class="form-textarea"></textarea>
-            <button @click="showAIGenModal = true" class="ai-gen-btn">
+            <textarea
+              id="bookDesc"
+              v-model="newBook.description"
+              placeholder="请输入书籍简介"
+              class="form-textarea"
+            />
+            <button
+              class="ai-gen-btn"
+              @click="showAIGenModal = true"
+            >
               <span class="icon">🤖</span> AI生成
             </button>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button @click="closeModal" class="cancel-btn">取消</button>
-        <button @click="saveBook" class="save-btn">保存</button>
+        <button
+          class="cancel-btn"
+          @click="closeModal"
+        >
+          取消
+        </button>
+        <button
+          class="save-btn"
+          @click="saveBook"
+        >
+          保存
+        </button>
       </div>
     </div>
 
     <!-- 删除确认对话框 -->
-    <div class="modal-overlay" v-if="showDeleteModal" @click="cancelDelete"></div>
-    <div class="modal" v-if="showDeleteModal">
+    <div
+      v-if="showDeleteModal"
+      class="modal-overlay"
+      @click="cancelDelete"
+    />
+    <div
+      v-if="showDeleteModal"
+      class="modal"
+    >
       <div class="modal-header">
-        <h2 class="modal-title">确认删除</h2>
-        <button @click="cancelDelete" class="modal-close">×</button>
+        <h2 class="modal-title">
+          确认删除
+        </h2>
+        <button
+          class="modal-close"
+          @click="cancelDelete"
+        >
+          ×
+        </button>
       </div>
       <div class="modal-body">
-        <p class="confirm-text">确定要删除《{{ bookToDelete?.title }}》吗？此操作不可恢复。</p>
+        <p class="confirm-text">
+          确定要删除《{{ bookToDelete?.title }}》吗？此操作不可恢复。
+        </p>
       </div>
       <div class="modal-footer">
-        <button @click="cancelDelete" class="cancel-btn">取消</button>
-        <button @click="deleteBook" class="delete-confirm-btn">确认删除</button>
+        <button
+          class="cancel-btn"
+          @click="cancelDelete"
+        >
+          取消
+        </button>
+        <button
+          class="delete-confirm-btn"
+          @click="deleteBook"
+        >
+          确认删除
+        </button>
       </div>
     </div>
 
     <!-- AI生成对话框 -->
-    <div class="modal-overlay" v-if="showAIGenModal" @click="showAIGenModal = false"></div>
-    <div class="modal" v-if="showAIGenModal">
+    <div
+      v-if="showAIGenModal"
+      class="modal-overlay"
+      @click="showAIGenModal = false"
+    />
+    <div
+      v-if="showAIGenModal"
+      class="modal"
+    >
       <div class="modal-header">
-        <h2 class="modal-title">AI生成书名简介</h2>
-        <button @click="showAIGenModal = false" class="modal-close">×</button>
+        <h2 class="modal-title">
+          AI生成书名简介
+        </h2>
+        <button
+          class="modal-close"
+          @click="showAIGenModal = false"
+        >
+          ×
+        </button>
       </div>
       <div class="modal-body">
         <div class="form-group">
           <label>输入内容</label>
-          <textarea v-model="aiInputContent" placeholder="输入任何有关小说的内容，越详细越好……" class="form-textarea h-40"
-            :disabled="isGenerating"></textarea>
+          <textarea
+            v-model="aiInputContent"
+            placeholder="输入任何有关小说的内容，越详细越好……"
+            class="form-textarea h-40"
+            :disabled="isGenerating"
+          />
         </div>
         <div class="form-group">
           <label>AI输出</label>
-          <textarea v-model="aiOutputContent" placeholder="AI生成的内容将显示在这里" class="form-textarea h-40"></textarea>
+          <textarea
+            v-model="aiOutputContent"
+            placeholder="AI生成的内容将显示在这里"
+            class="form-textarea h-40"
+          />
         </div>
       </div>
       <div class="modal-footer">
-        <button @click="showAIGenModal = false" class="cancel-btn">取消</button>
-        <button @click="applyAIContent" class="apply-btn" :disabled="!aiOutputContent.trim()">
+        <button
+          class="cancel-btn"
+          @click="showAIGenModal = false"
+        >
+          取消
+        </button>
+        <button
+          class="apply-btn"
+          :disabled="!aiOutputContent.trim()"
+          @click="applyAIContent"
+        >
           应用
         </button>
-        <button @click="generateDescription" class="save-btn" :disabled="isGenerating || !aiInputContent.trim()">
+        <button
+          class="save-btn"
+          :disabled="isGenerating || !aiInputContent.trim()"
+          @click="generateDescription"
+        >
           {{ isGenerating ? '生成中...' : '生成' }}
         </button>
       </div>
@@ -116,8 +262,7 @@
 </template>
 
 <script setup lang="ts">
-import { ElMessageBox } from 'element-plus'
-import { ref, reactive, onMounted, computed, defineAsyncComponent } from 'vue'
+import { ref, reactive, onMounted, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { BookConfigService } from '../services/bookConfigService'
 import { Book } from '../services/bookConfigService'
@@ -153,7 +298,7 @@ const saveBooks = async () => {
       await BookConfigService.saveBook(book)
     } catch (error) {
       console.error('保存书籍失败', error)
-      ElMessage.error(error.message)
+      ElMessage.error(error instanceof Error ? error.message : String(error))
     }
   }
 }
@@ -281,7 +426,7 @@ const generateDescription = async () => {
       throw new Error(result.error)
     }
 
-    aiOutputContent.value = result.text
+    aiOutputContent.value = result.text || ''
     ElMessage.success('生成成功')
   } catch (error) {
     console.error('AI生成失败:', error)
@@ -311,14 +456,16 @@ const applyAIContent = () => {
 
 // 打开系统设置
 const openSettings = () => {
+  console.log('打开系统设置按钮被点击')
   // 触发打开设置事件
   window.dispatchEvent(new CustomEvent('open-settings'))
+  console.log('open-settings事件已派发')
 }
 </script>
 
 <style scoped>
 .book-library-page {
-  @apply min-h-screen w-full flex flex-col bg-gray-50 overflow-auto p-4 pb-8;
+  @apply min-h-screen w-full flex flex-col bg-gray-50 overflow-auto p-6 pb-8;
 }
 
 .library-header {
@@ -334,11 +481,12 @@ const openSettings = () => {
 }
 
 .books-container {
-  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center pb-8;
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 pb-8;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 }
 
 .book-card {
-  @apply bg-white rounded-lg shadow-md p-6 flex flex-col w-full min-w-[280px] max-w-[320px];
+  @apply bg-white rounded-lg shadow-md p-6 flex flex-col w-full min-w-[280px];
 }
 
 .book-info {
@@ -491,14 +639,19 @@ const openSettings = () => {
 
 .library-header {
   @apply flex justify-between items-center p-6 bg-white shadow-sm;
+  position: relative;
+  width: 100%;
 }
 
 .page-title {
   @apply text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 tracking-normal;
-  font-family: "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
+  font-family: "Microsoft YaHei", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", Arial, sans-serif;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
   transform: scale(1);
   transition: transform 0.2s ease;
+  position: static;
+  flex: 1;
+  text-align: center;
 }
 
 .page-title:hover {

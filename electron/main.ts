@@ -79,6 +79,8 @@ function isMouseInAppWindows(): boolean {
 }
 
 function createWindow() {
+  const isMac = process.platform === 'darwin';
+  
   const win = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -86,13 +88,22 @@ function createWindow() {
       preload: path.join(__dirname, process.env.VITE_DEV_SERVER_URL ? '../dist/electron/preload.js' : './preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      webSecurity: true
+      webSecurity: true,
+      allowRunningInsecureContent: false
     },
     frame: true,
-    titleBarStyle: 'default',
+    titleBarStyle: isMac ? 'hiddenInset' : 'default',
     icon: path.join(__dirname, '../public/icon.ico'),
     // 设置背景色
-    backgroundColor: '#ffffff'
+    backgroundColor: '#ffffff',
+    // macOS specific settings
+    ...(isMac && {
+      titleBarOverlay: {
+        color: '#ffffff',
+        symbolColor: '#000000',
+        height: 28
+      }
+    })
   })
 
   // 监听主窗口焦点事件
@@ -102,7 +113,7 @@ function createWindow() {
     }
 
     // 更新主窗口焦点状态
-    const mainWindowId = 'main-' + win.id;
+    const mainWindowId = `main-${  win.id}`;
     windowFocusStateBitmap.set(mainWindowId, true);
     
     // 检查是否有任何窗口有焦点
@@ -122,7 +133,7 @@ function createWindow() {
   // 监听主窗口失去焦点事件
   win.on('blur', () => {
     // 更新主窗口焦点状态
-    const mainWindowId = 'main-' + win.id;
+    const mainWindowId = `main-${  win.id}`;
     windowFocusStateBitmap.set(mainWindowId, false);
     
     if (!isMouseInAppWindows()) {
@@ -213,18 +224,33 @@ function createWindow() {
   if (process.env.VITE_DEV_SERVER_URL) {
     win.loadURL(process.env.VITE_DEV_SERVER_URL)
   } else {
-    // 设置CSP头
+    // 设置CSP头 - 允许localStorage和文件访问
     win.webContents.session.webRequest.onHeadersReceived((details, callback) => {
       callback({
         responseHeaders: {
           ...details.responseHeaders,
-          'Content-Security-Policy': ["default-src 'self' 'unsafe-inline' 'unsafe-eval' data: file: http: https: app:"]
+          'Content-Security-Policy': ["default-src 'self' 'unsafe-inline' 'unsafe-eval' data: file:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' http: https: ws: wss:"]
         }
       });
     });
 
-    // 使用file://协议加载本地文件
-    win.loadFile(path.join(__dirname, '../../dist/index.html'))
+    // 使用正确的文件路径加载本地文件
+    const indexPath = path.join(__dirname, '../dist/index.html');
+    console.log('Loading file from:', indexPath);
+    win.loadFile(indexPath).catch(err => {
+      console.error('Failed to load index.html:', err);
+      // 尝试备用路径 - 适用于打包后的应用
+      const altPath = path.join(__dirname, '../../app/dist/index.html');
+      win.loadFile(altPath).catch(err2 => {
+        console.error('Failed to load from app/dist:', err2);
+        // 最后尝试相对路径
+        win.loadFile(path.join(__dirname, 'dist/index.html')).catch(err3 => {
+          console.error('Failed to load from relative path:', err3);
+          // 如果所有路径都失败，显示错误页面
+          win.loadURL('data:text/html,<h1>Failed to load application</h1><p>Please check the application installation.</p>');
+        });
+      });
+    });
   }
 
   enable(win.webContents)
@@ -305,7 +331,7 @@ function createMenu() {
             await shell.openPath(helpPath).catch(async (err) => {
               console.error('打开帮助文档失败:', err);
               // 如果直接打开失败，尝试用默认浏览器打开
-              await shell.openExternal('file://' + helpPath).catch(e => {
+              await shell.openExternal(`file://${  helpPath}`).catch(e => {
                 console.error('使用浏览器打开帮助文档失败:', e);
               });
             });
@@ -641,24 +667,32 @@ ipcMain.handle('create-fragment-window', async (_event, fragment: any) => {
     }
     
     // 创建新窗口 - 极简样式
+    const isMac = process.platform === 'darwin';
     const fragmentWindow = new BrowserWindow({
-      width: 550,
-      height: 350,
+      width: 580,
+      height: 420,
       frame: false, // 无边框窗口
       modal: false,
       show: false,
-      backgroundColor: '#00000000', // 透明背景
+      backgroundColor: '#ffffff', // 改为白色背景
       // 设置关闭时的行为
       closable: true,
       alwaysOnTop: true, // 窗口始终保持在最前面
-      transparent: true, // 添加透明支持
+      transparent: false, // 移除透明支持，避免显示问题
       webPreferences: {
         preload: path.join(__dirname, process.env.VITE_DEV_SERVER_URL ? '../dist/electron/preload.js' : './preload.js'),
         nodeIntegration: false,
         contextIsolation: true,
-        webSecurity: true
+        webSecurity: true,
+        allowRunningInsecureContent: false
       },
-      // 移除vibrancy和roundedCorners，它们在Windows下兼容性不好
+      // macOS specific settings for better appearance
+      ...(isMac && {
+        roundedCorners: true,
+        titleBarStyle: 'hiddenInset',
+        visualEffectState: 'active'
+      }),
+      // 移除vibrancy，避免显示问题
       resizable: false, // 禁止调整大小以保持圆角外观
     });
 
@@ -733,8 +767,22 @@ ipcMain.handle('create-fragment-window', async (_event, fragment: any) => {
     if (process.env.VITE_DEV_SERVER_URL) {
       await fragmentWindow.loadURL(`${process.env.VITE_DEV_SERVER_URL}#/fragment-editor`);
     } else {
-      await fragmentWindow.loadFile(path.join(__dirname, '../../dist/index.html'), {
+      const indexPath = path.join(__dirname, '../dist/index.html');
+      await fragmentWindow.loadFile(indexPath, {
         hash: '/fragment-editor'
+      }).catch(err => {
+        console.error('Failed to load fragment window:', err);
+        // 尝试备用路径 - 适用于打包后的应用
+        const altPath = path.join(__dirname, '../../app/dist/index.html');
+        return fragmentWindow.loadFile(altPath, {
+          hash: '/fragment-editor'
+        }).catch(err2 => {
+          console.error('Failed to load from app/dist:', err2);
+          // 最后尝试相对路径
+          return fragmentWindow.loadFile(path.join(__dirname, 'dist/index.html'), {
+            hash: '/fragment-editor'
+          });
+        });
       });
     }
     

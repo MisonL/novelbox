@@ -16,7 +16,7 @@ interface MongoDBCollection {
   insertOne(document: MongoDBDocument): Promise<any>;
   findOne(query: any): Promise<any>;
   find(query: any): Promise<any>;
-  updateOne(query: any, update: any): Promise<any>;
+  updateOne(query: any, update: any, options?: any): Promise<any>;
   deleteOne(query: any): Promise<any>;
   deleteMany(query: any): Promise<any>;
 }
@@ -36,11 +36,9 @@ let MongoClient: any = null;
 export class MongoDBService extends BaseDatabaseService {
   private client: MongoClient | null = null;
   private db: MongoDBDatabase | null = null;
-  private config: MongoDBConfig;
 
   constructor(config: DatabaseConfig) {
     super(config);
-    this.config = config as MongoDBConfig;
   }
 
   async connect(): Promise<void> {
@@ -50,10 +48,19 @@ export class MongoDBService extends BaseDatabaseService {
         const mongodb = await import('mongodb');
         MongoClient = mongodb.MongoClient;
       }
+      
+      if (!MongoClient) {
+        throw new Error('MongoDB客户端初始化失败');
+      }
+      
+      if (!MongoClient.prototype || !MongoClient.prototype.connect) {
+        throw new Error('MongoDB客户端类型不正确');
+      }
 
-      this.client = new MongoClient(this.config.connectionString);
-      await this.client.connect();
-      this.db = this.client.db(this.config.databaseName);
+      const mongoConfig = this.config as MongoDBConfig;
+      this.client = new MongoClient(mongoConfig.connectionString) as any;
+      await (this.client as any).connect();
+      this.db = (this.client as any).db(mongoConfig.databaseName);
       this.isConnected = true;
     } catch (error) {
       throw new Error(`连接MongoDB失败: ${error instanceof Error ? error.message : String(error)}`);
@@ -138,7 +145,7 @@ export class MongoDBService extends BaseDatabaseService {
       const cursor = await collection.find({});
       const books = await cursor.toArray();
       
-      return books.map(book => ({
+      return books.map((book: any) => ({
         ...book,
         lastEdited: this.parseDate(book.lastEdited)
       }));
@@ -308,7 +315,7 @@ export class MongoDBService extends BaseDatabaseService {
       const cursor = await collection.find({});
       const configs = await cursor.toArray();
       
-      return configs.map(c => c.provider);
+      return configs.map((c: any) => c.provider);
     } catch (error) {
       console.error('列出AI配置失败:', error);
       return [];

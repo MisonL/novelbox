@@ -25,24 +25,27 @@ let sqlite: SQLite | null = null;
 
 export class SQLiteService extends BaseDatabaseService {
   private db: SQLiteDatabase | null = null;
-  private config: SQLiteConfig;
 
   constructor(config: DatabaseConfig) {
     super(config);
-    this.config = config as SQLiteConfig;
   }
 
   async connect(): Promise<void> {
     try {
       if (!sqlite) {
         // 动态导入SQLite客户端
-        const sqliteModule = await import('sqlite3');
+        const sqliteModule = await import('sqlite3') as any;
         sqlite = sqliteModule.default || sqliteModule;
       }
+      
+      if (!sqlite || !sqlite.Database) {
+        throw new Error('SQLite客户端初始化失败');
+      }
 
-      this.db = new sqlite.Database(
-        this.config.filePath,
-        sqlite.OPEN_READWRITE | sqlite.OPEN_CREATE,
+      const sqliteConfig = this.config as SQLiteConfig;
+      this.db = new (sqlite.Database as any)(
+        sqliteConfig.filePath,
+        (sqlite.OPEN_READWRITE || 2) | (sqlite.OPEN_CREATE || 4),
         (err: any) => {
           if (err) {
             throw new Error(`连接SQLite失败: ${err.message}`);
@@ -51,7 +54,9 @@ export class SQLiteService extends BaseDatabaseService {
       );
 
       // 启用外键约束
-      this.db.exec('PRAGMA foreign_keys = ON');
+      if (this.db) {
+        (this.db as any).exec('PRAGMA foreign_keys = ON');
+      }
       
       this.isConnected = true;
     } catch (error) {

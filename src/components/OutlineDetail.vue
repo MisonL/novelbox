@@ -1,26 +1,53 @@
 <template>
-  <div v-if="show" class="outline-detail-panel">
+  <div
+    v-if="show"
+    class="outline-detail-panel"
+  >
     <div class="outline-header">
-      <h2 class="text-xl font-bold">细纲</h2>
-      <button @click="$emit('close')" class="close-btn">
+      <h2 class="text-xl font-bold">
+        细纲
+      </h2>
+      <button
+        class="close-btn"
+        @click="$emit('close')"
+      >
         <span class="close-icon">×</span>
       </button>
     </div>
     <div class="chapter-input">
       <span class="chapter-label">第</span>
-      <input v-model="chapterNumber" type="number" class="chapter-number" required placeholder="章节编号" min="1"
-        @input="validateChapterNumber" />
+      <input
+        v-model="chapterNumber"
+        type="number"
+        class="chapter-number"
+        required
+        placeholder="章节编号"
+        min="1"
+        @input="validateChapterNumber"
+      >
       <span class="chapter-label">章</span>
     </div>
     <div class="outline-content">
-      <textarea v-model="detailContent" class="content-input" placeholder="请输入本章细纲..." @input="debouncedSave"
-        :disabled="isGenerating"></textarea>
+      <textarea
+        v-model="detailContent"
+        class="content-input"
+        placeholder="请输入本章细纲..."
+        :disabled="isGenerating"
+        @input="debouncedSave"
+      />
       <div class="button-group">
-        <button @click="generateAIContent" class="ai-btn"
-          :disabled="isGenerating || !detailContent.trim() || !chapterNumber">
+        <button
+          class="ai-btn"
+          :disabled="isGenerating || !detailContent.trim() || !chapterNumber"
+          @click="generateAIContent"
+        >
           {{ isGenerating ? '生成中...' : 'AI润色' }}
         </button>
-        <button @click="saveContent" class="save-btn" :disabled="!detailContent.trim() || !chapterNumber">
+        <button
+          class="save-btn"
+          :disabled="!detailContent.trim() || !chapterNumber"
+          @click="saveContent"
+        >
           保存
         </button>
       </div>
@@ -100,7 +127,7 @@ const generateAIContent = async () => {
       return
     }
 
-    detailContent.value = response.text
+    detailContent.value = response.text || ''
     saveContent()
   } catch (error) {
     console.error('AI生成失败:', error)

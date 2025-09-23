@@ -74,6 +74,96 @@ export const AI_PROVIDERS: AIProvider[] = [
     ],
     defaultTemperature: 0.7,
     defaultTopP: 0.95
+  },
+  {
+    id: 'ollama',
+    name: 'Ollama',
+    models: [
+      { id: 'llama3.2', name: 'Llama 3.2', maxTokens: 8192 },
+      { id: 'llama3.1', name: 'Llama 3.1', maxTokens: 8192 },
+      { id: 'mistral', name: 'Mistral', maxTokens: 8192 },
+      { id: 'codellama', name: 'Code Llama', maxTokens: 8192 },
+      { id: 'phi3', name: 'Phi-3', maxTokens: 4096 },
+      { id: 'qwen2.5', name: 'Qwen 2.5', maxTokens: 8192 },
+      { id: 'gemma2', name: 'Gemma 2', maxTokens: 8192 },
+      { id: 'custom', name: '自定义模型', maxTokens: 8192 }
+    ],
+    defaultTemperature: 0.7,
+    defaultTopP: 0.95
+  },
+  {
+    id: 'lmstudio',
+    name: 'LM Studio',
+    models: [
+      { id: 'local-model', name: '本地模型', maxTokens: 8192 },
+      { id: 'llama3.2-3b', name: 'Llama 3.2 3B', maxTokens: 8192 },
+      { id: 'mistral-7b', name: 'Mistral 7B', maxTokens: 8192 },
+      { id: 'phi-3-mini', name: 'Phi-3 Mini', maxTokens: 4096 },
+      { id: 'qwen-2.5-7b', name: 'Qwen 2.5 7B', maxTokens: 8192 },
+      { id: 'custom', name: '自定义模型', maxTokens: 8192 }
+    ],
+    defaultTemperature: 0.7,
+    defaultTopP: 0.95
+  },
+  {
+    id: 'kimi',
+    name: 'Kimi',
+    models: [
+      { id: 'kimi-latest', name: 'Kimi最新模型', maxTokens: 128000 },
+      { id: 'kimi-8k', name: 'Kimi 8K', maxTokens: 8192 },
+      { id: 'kimi-32k', name: 'Kimi 32K', maxTokens: 32768 },
+      { id: 'kimi-128k', name: 'Kimi 128K', maxTokens: 128000 }
+    ],
+    defaultTemperature: 0.7,
+    defaultTopP: 0.95
+  },
+  {
+    id: 'wenxin',
+    name: '文心一言',
+    models: [
+      { id: 'ernie-4.0', name: '文心大模型4.0', maxTokens: 8192 },
+      { id: 'ernie-3.5', name: '文心大模型3.5', maxTokens: 8192 },
+      { id: 'ernie-speed', name: '文心大模型Speed', maxTokens: 8192 },
+      { id: 'ernie-lite', name: '文心大模型Lite', maxTokens: 8192 }
+    ],
+    defaultTemperature: 0.7,
+    defaultTopP: 0.95
+  },
+  {
+    id: 'alibailian',
+    name: '阿里百炼',
+    models: [
+      { id: 'qwen-max', name: '通义千问-Max', maxTokens: 8192 },
+      { id: 'qwen-plus', name: '通义千问-Plus', maxTokens: 8192 },
+      { id: 'qwen-turbo', name: '通义千问-Turbo', maxTokens: 8192 },
+      { id: 'qwen-long', name: '通义千问-Long', maxTokens: 30000 }
+    ],
+    defaultTemperature: 0.7,
+    defaultTopP: 0.95
+  },
+  {
+    id: 'siliconflow',
+    name: '硅基流动',
+    models: [
+      { id: 'deepseek-ai/DeepSeek-V3', name: 'DeepSeek-V3', maxTokens: 8192 },
+      { id: 'deepseek-ai/DeepSeek-R1', name: 'DeepSeek-R1', maxTokens: 8192 },
+      { id: 'Qwen/Qwen2.5-72B-Instruct', name: 'Qwen2.5-72B', maxTokens: 8192 },
+      { id: 'meta-llama/Llama-3.3-70B-Instruct', name: 'Llama-3.3-70B', maxTokens: 8192 }
+    ],
+    defaultTemperature: 0.7,
+    defaultTopP: 0.95
+  },
+  {
+    id: 'modelscope',
+    name: '魔塔社区',
+    models: [
+      { id: 'qwen/Qwen2.5-72B-Instruct', name: 'Qwen2.5-72B', maxTokens: 8192 },
+      { id: 'qwen/Qwen2.5-7B-Instruct', name: 'Qwen2.5-7B', maxTokens: 8192 },
+      { id: 'deepseek-ai/DeepSeek-V3', name: 'DeepSeek-V3', maxTokens: 8192 },
+      { id: 'baichuan-inc/Baichuan2-13B-Chat', name: 'Baichuan2-13B', maxTokens: 8192 }
+    ],
+    defaultTemperature: 0.7,
+    defaultTopP: 0.95
   }
 ]
 

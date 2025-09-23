@@ -1,0 +1,50 @@
+appId: com.novelbox.app
+productName: NovelBox
+directories:
+  output: release/dmg
+  buildResources: build
+files:
+  - "electron/**/*"
+  - "dist/**/*"
+  - "node_modules/**/*"
+  - "package.json"
+  - "!node_modules/.pnpm-debug.log"
+  - "!dist-web/**/*"
+  - "!scripts/**/*"
+  - "!config/**/*"
+  - "!docker/**/*"
+  - "!docs/**/*"
+  - "!venv/**/*"
+  - "!.git/**/*"
+  - "!**/*.map"
+  - "!**/node_modules/.cache/**/*"
+  - "!**/node_modules/**/test/**/*"
+  - "!**/node_modules/**/tests/**/*"
+  - "!**/node_modules/**/docs/**/*"
+  - "!**/node_modules/**/examples/**/*"
+mac:
+  category: public.app-category.productivity
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+  icon: public/icon-512.png
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  asar: false
+dmg:
+  title: NovelBox 安装程序
+  icon: public/icon-512.png
+  iconSize: 100
+  contents:
+    - x: 410
+      y: 150
+      type: link
+      path: /Applications
+    - x: 130
+      y: 150
+      type: file
+  window:
+    width: 540
+    height: 380

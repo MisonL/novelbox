@@ -26,11 +26,9 @@ const isWebEnvironment = typeof window !== 'undefined' && !window.electronAPI;
 
 export class MySQLService extends BaseDatabaseService {
   private pool: MySQLPool | null = null;
-  private config: MySQLConfig;
 
   constructor(config: DatabaseConfig) {
     super(config);
-    this.config = config as MySQLConfig;
   }
 
   async connect(): Promise<void> {
@@ -45,20 +43,24 @@ export class MySQLService extends BaseDatabaseService {
         mysql = await import('mysql2/promise');
       }
 
+      const mysqlConfig = this.config as MySQLConfig;
       this.pool = mysql.createPool({
-        host: this.config.host,
-        port: this.config.port,
-        user: this.config.username,
-        password: this.config.password,
-        database: this.config.database,
-        ssl: this.config.ssl,
+        host: mysqlConfig.host,
+        port: mysqlConfig.port,
+        user: mysqlConfig.username,
+        password: mysqlConfig.password,
+        database: mysqlConfig.database,
+        ssl: mysqlConfig.ssl,
         waitForConnections: true,
         connectionLimit: 10,
         queueLimit: 0
       });
 
       // 测试连接
-      await this.pool.ping();
+      if (!this.pool) {
+        throw new Error('MySQL连接池初始化失败');
+      }
+      await (this.pool as any).ping();
       this.isConnected = true;
     } catch (error) {
       throw new Error(`连接MySQL失败: ${error instanceof Error ? error.message : String(error)}`);
@@ -92,7 +94,7 @@ export class MySQLService extends BaseDatabaseService {
       }
       
       // 测试连接
-      await this.pool!.ping();
+      await (this.pool as any)!.ping();
       return { success: true, message: 'MySQL连接正常' };
     } catch (error) {
       return { 
@@ -245,7 +247,7 @@ export class MySQLService extends BaseDatabaseService {
         
         if (!rows) return [];
         
-        return rows.map(book => ({
+        return rows.map((book: any) => ({
           id: book.id,
           title: book.title,
           description: book.description,
@@ -355,7 +357,7 @@ export class MySQLService extends BaseDatabaseService {
         
         if (!rows) return [];
         
-        return rows.map(chapter => ({
+        return rows.map((chapter: any) => ({
           id: chapter.id,
           title: chapter.title,
           type: chapter.type,
@@ -462,7 +464,7 @@ export class MySQLService extends BaseDatabaseService {
         
         if (!rows) return [];
         
-        return rows.map(fragment => ({
+        return rows.map((fragment: any) => ({
           id: fragment.id,
           title: fragment.title,
           content: fragment.content,
@@ -550,7 +552,7 @@ export class MySQLService extends BaseDatabaseService {
         
         if (!rows) return [];
         
-        return rows.map(row => row.provider);
+        return rows.map((row: any) => row.provider);
       } finally {
         connection.end();
       }

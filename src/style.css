@@ -28,10 +28,9 @@ a:hover {
 
 body {
   margin: 0;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
-  font-family: "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
+  font-family: "Microsoft YaHei", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", Arial, sans-serif;
   font-weight: 400;
   line-height: 1.5;
   color: #213547;
@@ -87,8 +86,8 @@ button:focus-visible {
 }
 
 #app {
-  margin: 0 auto;
-  text-align: center;
+  width: 100%;
+  height: 100%;
 }
 
 @media (prefers-color-scheme: light) {
@@ -101,5 +100,124 @@ button:focus-visible {
   }
   button {
     background-color: #f9f9f9;
+  }
+}
+
+/* macOS-specific fixes */
+@media screen and (-webkit-min-device-pixel-ratio: 2),
+       screen and (min-resolution: 192dpi) {
+  /* macOS Retina display fixes */
+  body {
+    -webkit-font-smoothing: subpixel-antialiased;
+    -moz-osx-font-smoothing: auto;
+  }
+  
+  /* Fix for macOS window controls overlap */
+  .editor-header {
+    padding-top: env(safe-area-inset-top, 24px);
+  }
+  
+  /* Ensure proper flexbox behavior on macOS */
+  .title-section {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  
+  /* Fix for macOS Safari flexbox issues */
+  .editor-main {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+  }
+  
+  .editor-sidebar {
+    flex-shrink: 0 !important;
+    width: 240px !important; /* Fixed width for macOS */
+  }
+  
+  .editor-content {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: auto !important;
+  }
+  
+  /* Fix modal positioning issues on macOS */
+  .modal {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    max-height: 90vh !important;
+    max-width: 90vw !important;
+  }
+  
+  .modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 9999 !important;
+  }
+  
+  /* Fix Element Plus dialog positioning on macOS */
+  .el-dialog {
+    margin: 0 auto !important;
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+  }
+  
+  .el-dialog__wrapper {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  /* Fix Element Plus dropdown positioning on macOS */
+  .el-select-dropdown,
+  .el-dropdown-menu,
+  .el-popper {
+    position: fixed !important;
+    z-index: 10001 !important;
+  }
+  
+  /* Fix Element Plus message and notification positioning */
+  .el-message,
+  .el-notification {
+    position: fixed !important;
+    z-index: 10002 !important;
+  }
+  
+  /* Fix for macOS button and input rendering */
+  .el-button,
+  .el-input__inner,
+  .el-textarea__inner {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+  }
+  
+  /* Fix flexbox issues in containers */
+  .book-library-page,
+  .novel-editor-page {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100vh !important;
+  }
+  
+  /* Ensure proper stacking context on macOS */
+  .app-container {
+    position: relative !important;
+    z-index: 1 !important;
+    isolation: isolate !important;
   }
 }

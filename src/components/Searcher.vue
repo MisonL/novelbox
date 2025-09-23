@@ -1,16 +1,49 @@
 <template>
-    <div class="search-replace-toolbar" v-show="showSearchReplace">
-        <div class="search-replace-inputs">
-            <input type="text" v-model="searchText" placeholder="查找内容" class="search-input" />
-            <input type="text" v-model="replaceText" placeholder="替换内容" class="replace-input" />
-        </div>
-        <div class="search-replace-buttons">
-            <button @click="search" class="search-btn">查找</button>
-            <button @click="replace" class="replace-btn">替换</button>
-            <button @click="replaceAll" class="replace-all-btn">全部替换</button>
-            <button @click="closeSearchReplace" class="close-btn">关闭</button>
-        </div>
+  <div
+    v-show="showSearchReplace"
+    class="search-replace-toolbar"
+  >
+    <div class="search-replace-inputs">
+      <input
+        v-model="searchText"
+        type="text"
+        placeholder="查找内容"
+        class="search-input"
+      >
+      <input
+        v-model="replaceText"
+        type="text"
+        placeholder="替换内容"
+        class="replace-input"
+      >
     </div>
+    <div class="search-replace-buttons">
+      <button
+        class="search-btn"
+        @click="search"
+      >
+        查找
+      </button>
+      <button
+        class="replace-btn"
+        @click="replace"
+      >
+        替换
+      </button>
+      <button
+        class="replace-all-btn"
+        @click="replaceAll"
+      >
+        全部替换
+      </button>
+      <button
+        class="close-btn"
+        @click="closeSearchReplace"
+      >
+        关闭
+      </button>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">

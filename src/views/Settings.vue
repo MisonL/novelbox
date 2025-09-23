@@ -2,12 +2,19 @@
   <div class="settings-container">
     <div class="settings-header">
       <h1>系统设置</h1>
-      <button @click="$emit('close')" class="close-button">×</button>
+      <button
+        class="close-button"
+        @click="$emit('close')"
+      >
+        ×
+      </button>
     </div>
     
     <div class="settings-content">
       <div class="setting-item">
-        <div class="setting-label">工作区路径</div>
+        <div class="setting-label">
+          工作区路径
+        </div>
         <div class="setting-control">
           <div class="input-with-button">
             <input 
@@ -16,25 +23,32 @@
               type="text" 
               placeholder="请选择工作区路径"
               readonly
-            />
-            <button @click="selectWorkspace" class="browse-button">浏览</button>
+            >
+            <button
+              class="browse-button"
+              @click="selectWorkspace"
+            >
+              浏览
+            </button>
           </div>
         </div>
       </div>
       
-      <div class="divider"></div>
+      <div class="divider" />
       
       <div class="setting-item">
-        <div class="setting-label">使用系统代理</div>
+        <div class="setting-label">
+          使用系统代理
+        </div>
         <div class="setting-control">
           <div class="toggle-switch">
             <input 
               id="use-proxy" 
-              type="checkbox" 
               v-model="useSystemProxy" 
+              type="checkbox" 
               @change="toggleProxy"
-            />
-            <label for="use-proxy"></label>
+            >
+            <label for="use-proxy" />
           </div>
         </div>
       </div>
@@ -43,19 +57,27 @@
         系统默认使用系统代理，如需使用AI配置中的代理，请关闭此选项
       </div>
       
-      <div class="divider"></div>
+      <div class="divider" />
       
       <!-- 数据库配置 -->
       <div class="setting-section">
-        <div class="section-title">数据库配置</div>
+        <div class="section-title">
+          数据库配置
+        </div>
         <div class="setting-description">
           选择数据存储方式，支持多种数据库类型
         </div>
         
         <div class="setting-item">
-          <div class="setting-label">数据库类型</div>
+          <div class="setting-label">
+            数据库类型
+          </div>
           <div class="setting-control">
-            <select v-model="databaseType" @change="onDatabaseTypeChange" class="database-select">
+            <select
+              v-model="databaseType"
+              class="database-select"
+              @change="onDatabaseTypeChange"
+            >
               <option 
                 v-for="db in supportedDatabases" 
                 :key="db.type" 
@@ -65,288 +87,388 @@
               </option>
             </select>
           </div>
-          <div class="setting-description" v-if="getCurrentDatabaseDescription()">
+          <div
+            v-if="getCurrentDatabaseDescription()"
+            class="setting-description"
+          >
             {{ getCurrentDatabaseDescription() }}
           </div>
         </div>
         
         <!-- MongoDB配置 -->
-        <div v-if="databaseType === 'mongodb'" class="database-config">
+        <div
+          v-if="databaseType === 'mongodb'"
+          class="database-config"
+        >
           <div class="setting-item">
-            <div class="setting-label">连接字符串</div>
+            <div class="setting-label">
+              连接字符串
+            </div>
             <div class="setting-control">
               <input 
                 v-model="mongodbConfig.connectionString" 
                 type="text" 
                 placeholder="mongodb://localhost:27017"
                 class="config-input"
-              />
+              >
             </div>
           </div>
           
           <div class="setting-item">
-            <div class="setting-label">数据库名称</div>
+            <div class="setting-label">
+              数据库名称
+            </div>
             <div class="setting-control">
               <input 
                 v-model="mongodbConfig.databaseName" 
                 type="text" 
                 placeholder="novelbox"
                 class="config-input"
-              />
+              >
             </div>
           </div>
           
           <div class="setting-item">
-            <div class="setting-label">Atlas免费层</div>
+            <div class="setting-label">
+              Atlas免费层
+            </div>
             <div class="setting-control">
               <div class="toggle-switch">
                 <input 
                   id="mongodb-atlas" 
-                  type="checkbox" 
-                  v-model="mongodbConfig.isAtlas"
-                />
-                <label for="mongodb-atlas"></label>
+                  v-model="mongodbConfig.isAtlas" 
+                  type="checkbox"
+                >
+                <label for="mongodb-atlas" />
               </div>
             </div>
           </div>
         </div>
         
         <!-- MySQL配置 -->
-        <div v-if="databaseType === 'mysql'" class="database-config">
+        <div
+          v-if="databaseType === 'mysql'"
+          class="database-config"
+        >
           <div class="setting-item">
-            <div class="setting-label">主机地址</div>
+            <div class="setting-label">
+              主机地址
+            </div>
             <div class="setting-control">
               <input 
                 v-model="mysqlConfig.host" 
                 type="text" 
                 placeholder="localhost"
                 class="config-input"
-              />
+              >
             </div>
           </div>
           
           <div class="setting-item">
-            <div class="setting-label">端口</div>
+            <div class="setting-label">
+              端口
+            </div>
             <div class="setting-control">
               <input 
                 v-model="mysqlConfig.port" 
                 type="number" 
                 placeholder="3306"
                 class="config-input"
-              />
+              >
             </div>
           </div>
           
           <div class="setting-item">
-            <div class="setting-label">用户名</div>
+            <div class="setting-label">
+              用户名
+            </div>
             <div class="setting-control">
               <input 
                 v-model="mysqlConfig.username" 
                 type="text" 
                 placeholder="root"
                 class="config-input"
-              />
+              >
             </div>
           </div>
           
           <div class="setting-item">
-            <div class="setting-label">密码</div>
+            <div class="setting-label">
+              密码
+            </div>
             <div class="setting-control">
               <input 
                 v-model="mysqlConfig.password" 
                 type="password" 
                 placeholder="password"
                 class="config-input"
-              />
+              >
             </div>
           </div>
           
           <div class="setting-item">
-            <div class="setting-label">数据库名称</div>
+            <div class="setting-label">
+              数据库名称
+            </div>
             <div class="setting-control">
               <input 
                 v-model="mysqlConfig.database" 
                 type="text" 
                 placeholder="novelbox"
                 class="config-input"
-              />
+              >
             </div>
           </div>
           
           <div class="setting-item">
-            <div class="setting-label">SSL连接</div>
+            <div class="setting-label">
+              SSL连接
+            </div>
             <div class="setting-control">
               <div class="toggle-switch">
                 <input 
                   id="mysql-ssl" 
-                  type="checkbox" 
-                  v-model="mysqlConfig.ssl"
-                />
-                <label for="mysql-ssl"></label>
+                  v-model="mysqlConfig.ssl" 
+                  type="checkbox"
+                >
+                <label for="mysql-ssl" />
               </div>
             </div>
           </div>
         </div>
         
         <!-- SQL Server配置 -->
-        <div v-if="databaseType === 'sqlserver'" class="database-config">
+        <div
+          v-if="databaseType === 'sqlserver'"
+          class="database-config"
+        >
           <div class="setting-item">
-            <div class="setting-label">服务器地址</div>
+            <div class="setting-label">
+              服务器地址
+            </div>
             <div class="setting-control">
               <input 
                 v-model="sqlserverConfig.server" 
                 type="text" 
                 placeholder="localhost"
                 class="config-input"
-              />
+              >
             </div>
           </div>
           
           <div class="setting-item">
-            <div class="setting-label">端口</div>
+            <div class="setting-label">
+              端口
+            </div>
             <div class="setting-control">
               <input 
                 v-model="sqlserverConfig.port" 
                 type="number" 
                 placeholder="1433"
                 class="config-input"
-              />
+              >
             </div>
           </div>
           
           <div class="setting-item">
-            <div class="setting-label">用户名</div>
+            <div class="setting-label">
+              用户名
+            </div>
             <div class="setting-control">
               <input 
                 v-model="sqlserverConfig.username" 
                 type="text" 
                 placeholder="sa"
                 class="config-input"
-              />
+              >
             </div>
           </div>
           
           <div class="setting-item">
-            <div class="setting-label">密码</div>
+            <div class="setting-label">
+              密码
+            </div>
             <div class="setting-control">
               <input 
                 v-model="sqlserverConfig.password" 
                 type="password" 
                 placeholder="password"
                 class="config-input"
-              />
+              >
             </div>
           </div>
           
           <div class="setting-item">
-            <div class="setting-label">数据库名称</div>
+            <div class="setting-label">
+              数据库名称
+            </div>
             <div class="setting-control">
               <input 
                 v-model="sqlserverConfig.database" 
                 type="text" 
                 placeholder="novelbox"
                 class="config-input"
-              />
+              >
             </div>
           </div>
           
           <div class="setting-item">
-            <div class="setting-label">加密连接</div>
+            <div class="setting-label">
+              加密连接
+            </div>
             <div class="setting-control">
               <div class="toggle-switch">
                 <input 
                   id="sqlserver-encrypt" 
-                  type="checkbox" 
-                  v-model="sqlserverConfig.encrypt"
-                />
-                <label for="sqlserver-encrypt"></label>
+                  v-model="sqlserverConfig.encrypt" 
+                  type="checkbox"
+                >
+                <label for="sqlserver-encrypt" />
               </div>
             </div>
           </div>
           
           <div class="setting-item">
-            <div class="setting-label">信任服务器证书</div>
+            <div class="setting-label">
+              信任服务器证书
+            </div>
             <div class="setting-control">
               <div class="toggle-switch">
                 <input 
                   id="sqlserver-trust" 
-                  type="checkbox" 
-                  v-model="sqlserverConfig.trustServerCertificate"
-                />
-                <label for="sqlserver-trust"></label>
+                  v-model="sqlserverConfig.trustServerCertificate" 
+                  type="checkbox"
+                >
+                <label for="sqlserver-trust" />
               </div>
             </div>
           </div>
         </div>
         
         <!-- SQLite配置 -->
-        <div v-if="databaseType === 'sqlite'" class="database-config">
+        <div
+          v-if="databaseType === 'sqlite'"
+          class="database-config"
+        >
           <div class="setting-item">
-            <div class="setting-label">数据库文件路径</div>
+            <div class="setting-label">
+              数据库文件路径
+            </div>
             <div class="setting-control">
               <input 
                 v-model="sqliteConfig.filePath" 
                 type="text" 
                 placeholder="./data/novelbox.db"
                 class="config-input"
-              />
+              >
             </div>
           </div>
         </div>
         
         <div class="setting-item">
-          <div class="setting-label">测试连接</div>
+          <div class="setting-label">
+            测试连接
+          </div>
           <div class="setting-control">
-            <button @click="testDatabaseConnection" class="action-button test-button">测试连接</button>
+            <button
+              class="action-button test-button"
+              @click="testDatabaseConnection"
+            >
+              测试连接
+            </button>
           </div>
         </div>
         
         <div class="setting-item">
-          <div class="setting-label">保存配置</div>
+          <div class="setting-label">
+            保存配置
+          </div>
           <div class="setting-control">
-            <button @click="saveDatabaseConfig" class="action-button save-button">保存配置</button>
+            <button
+              class="action-button save-button"
+              @click="saveDatabaseConfig"
+            >
+              保存配置
+            </button>
           </div>
         </div>
         
         <div class="setting-item">
-          <div class="setting-label">重置配置</div>
+          <div class="setting-label">
+            重置配置
+          </div>
           <div class="setting-control">
-            <button @click="resetDatabaseConfig" class="action-button reset-button">重置为本地存储</button>
+            <button
+              class="action-button reset-button"
+              @click="resetDatabaseConfig"
+            >
+              重置为本地存储
+            </button>
           </div>
         </div>
         
-        <div v-if="databaseMessage" class="setting-message" :class="databaseMessageType">
+        <div
+          v-if="databaseMessage"
+          class="setting-message"
+          :class="databaseMessageType"
+        >
           {{ databaseMessage }}
         </div>
       </div>
       
-      <div class="divider"></div>
+      <div class="divider" />
       
       <!-- Web端数据管理 -->
-      <div v-if="isWebEnvironment" class="setting-section">
-        <div class="section-title">数据管理</div>
+      <div
+        v-if="isWebEnvironment"
+        class="setting-section"
+      >
+        <div class="section-title">
+          数据管理
+        </div>
         <div class="setting-description">
           Web端数据存储在浏览器中，建议定期导出备份以防数据丢失
         </div>
         
         <div class="setting-item">
-          <div class="setting-label">导出数据</div>
+          <div class="setting-label">
+            导出数据
+          </div>
           <div class="setting-control">
-            <button @click="exportData" class="action-button export-button">导出备份</button>
+            <button
+              class="action-button export-button"
+              @click="exportData"
+            >
+              导出备份
+            </button>
           </div>
         </div>
         
         <div class="setting-item">
-          <div class="setting-label">导入数据</div>
+          <div class="setting-label">
+            导入数据
+          </div>
           <div class="setting-control">
-            <button @click="importData" class="action-button import-button">导入备份</button>
+            <button
+              class="action-button import-button"
+              @click="importData"
+            >
+              导入备份
+            </button>
           </div>
         </div>
         
         <div class="setting-item">
-          <div class="setting-label">清除数据</div>
+          <div class="setting-label">
+            清除数据
+          </div>
           <div class="setting-control">
-            <button @click="clearData" class="action-button clear-button">清除所有数据</button>
+            <button
+              class="action-button clear-button"
+              @click="clearData"
+            >
+              清除所有数据
+            </button>
           </div>
         </div>
         
@@ -360,6 +482,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import type { DatabaseConfig } from '../services/databaseConfigService';
 
 // 检测是否为Web环境
 const isWebEnvironment = ref(typeof window !== 'undefined' && !window.electronAPI);
@@ -553,7 +676,7 @@ const resetDatabaseConfig = async () => {
 };
 
 // 获取当前数据库配置
-const getCurrentDatabaseConfig = () => {
+const getCurrentDatabaseConfig = (): DatabaseConfig => {
   switch (databaseType.value) {
     case 'mongodb':
       return {
@@ -561,7 +684,7 @@ const getCurrentDatabaseConfig = () => {
         connectionString: mongodbConfig.value.connectionString,
         databaseName: mongodbConfig.value.databaseName,
         isAtlas: mongodbConfig.value.isAtlas
-      };
+      } as DatabaseConfig;
     case 'mysql':
       return {
         type: 'mysql',
@@ -571,7 +694,7 @@ const getCurrentDatabaseConfig = () => {
         password: mysqlConfig.value.password,
         database: mysqlConfig.value.database,
         ssl: mysqlConfig.value.ssl
-      };
+      } as DatabaseConfig;
     case 'sqlserver':
       return {
         type: 'sqlserver',
@@ -582,17 +705,17 @@ const getCurrentDatabaseConfig = () => {
         database: sqlserverConfig.value.database,
         encrypt: sqlserverConfig.value.encrypt,
         trustServerCertificate: sqlserverConfig.value.trustServerCertificate
-      };
+      } as DatabaseConfig;
     case 'sqlite':
       return {
         type: 'sqlite',
         filePath: sqliteConfig.value.filePath
-      };
+      } as DatabaseConfig;
     case 'local':
     default:
       return {
         type: 'local'
-      };
+      } as DatabaseConfig;
   }
 };
 
@@ -659,7 +782,7 @@ const importData = async () => {
   try {
     // 动态导入webFileService
     const { importData: importDataFunc } = await import('../services/webFileService');
-    const result = await importDataFunc();
+    const result = await importDataFunc() as { success: boolean; message: string };
     
     if (result.success) {
       alert(result.message);

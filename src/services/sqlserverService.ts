@@ -10,6 +10,7 @@ interface SQLServerConnection {
   query(sql: string, params?: any[]): Promise<any>;
   execute(sql: string, params?: any[]): Promise<any>;
   close(): Promise<void>;
+  input(name: string, type: any, value: any): SQLServerConnection;
 }
 
 interface SQLServerPool {
@@ -22,11 +23,9 @@ let sql: any = null;
 
 export class SQLServerService extends BaseDatabaseService {
   private pool: SQLServerPool | null = null;
-  private config: SQLServerConfig;
 
   constructor(config: DatabaseConfig) {
     super(config);
-    this.config = config as SQLServerConfig;
   }
 
   async connect(): Promise<void> {
@@ -36,15 +35,16 @@ export class SQLServerService extends BaseDatabaseService {
         sql = await import('mssql');
       }
 
+      const sqlserverConfig = this.config as SQLServerConfig;
       const config = {
-        server: this.config.server,
-        port: this.config.port,
-        user: this.config.username,
-        password: this.config.password,
-        database: this.config.database,
+        server: sqlserverConfig.server,
+        port: sqlserverConfig.port,
+        user: sqlserverConfig.username,
+        password: sqlserverConfig.password,
+        database: sqlserverConfig.database,
         options: {
-          encrypt: this.config.encrypt || false,
-          trustServerCertificate: this.config.trustServerCertificate || false
+          encrypt: sqlserverConfig.encrypt || false,
+          trustServerCertificate: sqlserverConfig.trustServerCertificate || false
         },
         pool: {
           max: 10,
@@ -53,8 +53,13 @@ export class SQLServerService extends BaseDatabaseService {
         }
       };
 
-      this.pool = new sql.ConnectionPool(config);
-      await this.pool.connect();
+      this.pool = new sql.ConnectionPool(config) as SQLServerPool;
+      
+      if (!this.pool) {
+        throw new Error('SQL Server连接池初始化失败');
+      }
+      
+      await (this.pool as any).connect();
       this.isConnected = true;
     } catch (error) {
       throw new Error(`连接SQL Server失败: ${error instanceof Error ? error.message : String(error)}`);
@@ -225,7 +230,7 @@ export class SQLServerService extends BaseDatabaseService {
       
       if (!result.recordset) return [];
       
-      return result.recordset.map(book => ({
+      return result.recordset.map((book: any) => ({
         id: book.id,
         title: book.title,
         description: book.description,
@@ -320,7 +325,7 @@ export class SQLServerService extends BaseDatabaseService {
       
       if (!result.recordset) return [];
       
-      return result.recordset.map(chapter => ({
+      return result.recordset.map((chapter: any) => ({
         id: chapter.id,
         title: chapter.title,
         type: chapter.type,
@@ -411,7 +416,7 @@ export class SQLServerService extends BaseDatabaseService {
       
       if (!result.recordset) return [];
       
-      return result.recordset.map(fragment => ({
+      return result.recordset.map((fragment: any) => ({
         id: fragment.id,
         title: fragment.title,
         content: fragment.content,
@@ -488,7 +493,7 @@ export class SQLServerService extends BaseDatabaseService {
       
       if (!result.recordset) return [];
       
-      return result.recordset.map(row => row.provider);
+      return result.recordset.map((row: any) => row.provider);
     } catch (error) {
       console.error('列出AI配置失败:', error);
       return [];

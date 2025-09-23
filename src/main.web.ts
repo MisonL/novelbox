@@ -5,6 +5,7 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import './style.css'
 import App from './App.vue'
+import { initMacOSFixes } from './macOS-fix'
 
 // 创建Web环境的API模拟
 const createWebAPI = () => {
@@ -12,8 +13,8 @@ const createWebAPI = () => {
     // 文件操作
     saveFileAs: async (defaultPath: string) => {
       // 在Web环境中，使用浏览器的下载功能
-      const { content } = await import('./services/webFileService')
-      return content.saveFileAs(defaultPath)
+      const { saveFileAs } = await import('./services/webFileService')
+      return saveFileAs(defaultPath)
     },
     
     // 工作区管理
@@ -31,10 +32,10 @@ const createWebAPI = () => {
       window.addEventListener('open-settings', callback)
     },
     
-    changeWorkspace: async (fromSettings = false) => {
+    changeWorkspace: async (_fromSettings = false) => {
       // 在Web环境中，使用模拟的文件选择器
-      const { content } = await import('./services/webFileService')
-      return content.changeWorkspace()
+      const { changeWorkspace } = await import('./services/webFileService')
+      return changeWorkspace()
     },
     
     onTriggerChangeWorkspace: (callback: () => void) => {
@@ -68,28 +69,28 @@ const createWebAPI = () => {
     
     // 片段编辑窗口操作 - Web环境中使用模态框
     createFragmentWindow: async (fragment: any) => {
-      const { content } = await import('./services/webFragmentService')
-      return content.createFragmentWindow(fragment)
+      const { createFragmentWindow } = await import('./services/webFragmentService')
+      return createFragmentWindow(fragment)
     },
     
     updateFragmentContent: async (fragment: any) => {
-      const { content } = await import('./services/webFragmentService')
-      return content.updateFragmentContent(fragment)
+      const { updateFragmentContent } = await import('./services/webFragmentService')
+      return updateFragmentContent(fragment)
     },
     
-    closeFragmentWindow: (fragmentId: string) => {
+    closeFragmentWindow: (_fragmentId: string) => {
       // 触发关闭片段事件
-      window.dispatchEvent(new CustomEvent('close-fragment', { detail: { fragmentId } }))
+      window.dispatchEvent(new CustomEvent('close-fragment', { detail: { fragmentId: _fragmentId } }))
     },
     
-    minimizeFragmentWindow: (fragmentId: string) => {
+    minimizeFragmentWindow: (_fragmentId: string) => {
       // Web环境中不支持最小化
       console.log('Web环境不支持片段窗口最小化')
     },
     
     saveFragmentContent: async (fragment: any) => {
-      const { content } = await import('./services/webFragmentService')
-      return content.saveFragmentContent(fragment)
+      const { saveFragmentContent } = await import('./services/webFragmentService')
+      return saveFragmentContent(fragment)
     },
     
     onFragmentSaved: (callback: (fragment: any) => void) => {
@@ -111,8 +112,8 @@ const createWebAPI = () => {
     
     // 片段数据请求
     requestFragmentData: async (windowId: number) => {
-      const { content } = await import('./services/webFragmentService')
-      return content.requestFragmentData(windowId)
+      const { requestFragmentData } = await import('./services/webFragmentService')
+      return requestFragmentData(windowId)
     },
     
     getCurrentWindowId: () => Promise.resolve({ success: true, id: 1 }),
@@ -187,6 +188,9 @@ app.use(ElementPlus)
 
 // 挂载Web API到全局对象
 window.electronAPI = createWebAPI()
+
+// 初始化macOS UI修复
+initMacOSFixes()
 
 // 挂载应用
 app.mount('#app')

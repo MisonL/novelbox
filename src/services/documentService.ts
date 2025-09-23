@@ -143,7 +143,7 @@ export class DocumentService {
             return filePath;
         } catch (error) {
             console.error('导出Word文档失败:', error);
-            throw new Error('导出Word文档失败:' + error);
+            throw new Error(`导出Word文档失败:${  error}`);
         }
     }
 }
