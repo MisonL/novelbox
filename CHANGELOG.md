@@ -400,6 +400,14 @@ wine release/NovelBox-win32-x64/NovelBox.exe
 
 ## 发布说明
 
+### 1.2.0版本亮点
+- **UI组件完善**: Element Plus完整集成，修复所有UI组件问题
+- **环境兼容**: Web/Electron双端完美兼容，添加环境检测
+- **路由修复**: 修复NovelEditor路由错误，确保页面正常访问
+- **部署优化**: 统一端口5173，Docker部署更加稳定
+- **文档完善**: 全中文文档，开发者体验大幅提升
+- **开发工具**: 新增Spec-Kit规范工具，快速构建脚本
+
 ### 1.1.0版本亮点
 - **零依赖构建**: 无需Wine环境即可构建Windows版本
 - **全平台支持**: 支持Windows/Linux/macOS原生交叉编译
