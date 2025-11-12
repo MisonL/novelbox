@@ -1,9 +1,9 @@
 {
   "name": "novelbox",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "AI辅助小说创作工具 - AI-assisted novel writing tool",
   "type": "module",
-  "main": "electron/main.js",
+  "main": "electron/main.cjs",
   "author": {
     "name": "NovelBox Team",
     "email": "contact@novelbox.app"
@@ -36,21 +36,17 @@
     "clean": "node scripts/clean.cjs",
     "type-check": "vue-tsc --noEmit",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts",
-    "spec:check": "node scripts/spec-kit.js check",
-    "spec:validate": "node scripts/spec-kit.js validate",
-    "spec:test": "node scripts/spec-kit.js test",
+    "spec:check": "node scripts/spec-kit.cjs check",
+    "spec:validate": "node scripts/spec-kit.cjs validate",
+    "spec:test": "node scripts/spec-kit.cjs test",
     "test:unit": "vitest run",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
     "lint:fix": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.63.0",
     "@electron/remote": "^2.1.3",
     "@element-plus/icons-vue": "^2.3.2",
-    "@google/generative-ai": "^0.24.1",
-    "@types/node-fetch": "^2.6.13",
-    "@types/web-bluetooth": "^0.0.21",
     "@vueup/vue-quill": "^1.2.0",
     "@vueuse/core": "^13.9.0",
     "@vueuse/metadata": "14.0.0-alpha.0",
@@ -58,7 +54,6 @@
     "abort-controller": "^3.0.0",
     "agentkeepalive": "^4.6.0",
     "asynckit": "^0.4.0",
-    "axios": "^1.12.2",
     "braces": "^3.0.3",
     "buffer": "^6.0.3",
     "call-bind-apply-helpers": "^1.0.2",
@@ -74,7 +69,6 @@
     "es-errors": "^1.3.0",
     "es-object-atoms": "^1.1.1",
     "es-set-tostringtag": "^2.1.0",
-    "esbuild": "^0.25.10",
     "event-target-shim": "^6.0.2",
     "eventemitter3": "^5.0.1",
     "fast-diff": "^1.3.0",
@@ -93,18 +87,13 @@
     "hasown": "^2.0.2",
     "html-to-text": "^9.0.5",
     "humanize-ms": "^2.0.0",
-    "lodash-es": "^4.17.21",
-    "lodash.clonedeep": "^4.5.0",
     "math-intrinsics": "^1.1.0",
     "micromatch": "^4.0.8",
     "mime-db": "^1.54.0",
     "mime-types": "^3.0.1",
-    "mongodb": "^6.20.0",
     "ms": "^2.1.3",
-    "mssql": "^11.0.1",
-    "mysql2": "^3.15.0",
+    "mysql2": "^3.15.3",
     "node-fetch": "^3.3.2",
-    "openai": "^5.22.0",
     "parchment": "^3.0.0",
     "process": "^0.11.10",
     "proxy-from-env": "^1.1.0",
@@ -124,16 +113,18 @@
     "@tailwindcss/postcss": "^4.1.13",
     "@types/diff-match-patch": "^1.0.36",
     "@types/html-to-text": "^9.0.4",
-    "@types/node": "^24.5.2",
+    "@types/node": "^24.10.0",
     "@typescript-eslint/eslint-plugin": "^8.44.1",
     "@typescript-eslint/parser": "^8.44.1",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vitest/coverage-v8": "^3.2.4",
     "@vue/test-utils": "^2.4.0",
+    "asar": "^3.2.0",
     "autoprefixer": "^10.4.20",
     "crypto-browserify": "^3.12.1",
     "electron": "^38.1.2",
     "electron-builder": "^26.0.12",
+    "esbuild": "^0.25.10",
     "eslint": "^9.9.1",
     "eslint-plugin-vue": "^10.5.0",
     "events": "^3.3.0",
@@ -159,8 +150,8 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
-      "node_modules/**/*",
       "package.json",
+      "!**/node_modules/**",
       "!node_modules/.pnpm-debug.log",
       "!dist-web",
       "!scripts",
@@ -168,13 +159,11 @@
       "!docker",
       "!docs",
       "!venv",
-      "!.git"
+      "!.git",
+      "node_modules/@electron/remote/**/*"
     ],
-    "asar": false,
-    "asarUnpack": [
-      "node_modules/@electron/remote/**/*",
-      "public/help/**/*"
-    ],
+    "asar": true,
+    "asarUnpack": [],
     "win": {
       "target": [
         {
@@ -192,8 +181,7 @@
         {
           "target": "dir",
           "arch": [
-            "x64",
-            "arm64"
+            "x64"
           ]
         }
       ],
@@ -202,7 +190,7 @@
       "entitlementsInherit": "build/entitlements.mac.plist",
       "hardenedRuntime": false,
       "gatekeeperAssess": false,
-      "asar": false
+      "asar": true
     },
     "linux": {
       "target": [
@@ -224,27 +212,13 @@
     }
   },
   "pnpm": {
-    "overrides": {
-      "braces": "^3.0.3",
-      "lodash.template": "^4.5.0",
-      "yargs-parser": "^5.0.1",
-      "concat-stream": "^1.6.2",
-      "micromatch": "^4.0.8",
-      "esbuild": "^0.25.10",
-      "vite": "^5.4.20",
-      "glob-stream": "^8.0.0",
-      "vinyl-fs": "^4.0.0",
-      "quill": "^2.0.3",
-      "lodash": "^4.17.21",
-      "lodash-es": "^4.17.21",
-      "lodash.clonedeep": "^4.5.0",
-      "lodash.get": "^4.4.2"
-    },
+    "overrides": {},
     "ignoredBuiltDependencies": [
       "electron",
       "electron-winstaller",
       "fs-xattr",
       "macos-alias"
     ]
-  }
+  },
+  "packageManager": "pnpm@10.21.0+sha512.da3337267e400fdd3d479a6c68079ac6db01d8ca4f67572083e722775a796788a7a9956613749e000fac20d424b594f7a791a5f4e2e13581c5ef947f26968a40"
 }
