@@ -88,7 +88,7 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from '../utils/message'
 import AIService from '../services/aiService'
 import { AIConfigService } from '../services/aiConfigService'
 import { replaceProofreadPromptVariables } from '../services/promptVariableService'
@@ -318,15 +318,12 @@ const requestProofread = async () => {
 
     const prompt = await replaceProofreadPromptVariables(contentRef.value?.innerText || '')
 
-    const response = await aiService.generateText(prompt)
-    if (response.error) {
-      throw new Error(response.error)
-    }
+    const result = await aiService.generateText(prompt)
 
     try {
       // 对比原文和校对后的内容
       const originalText = contentRef.value?.innerText || ''
-      const correctedText = response.text || ''
+      const correctedText = result || ''
       
       // 找出差异
       const differences = findDifferences(originalText, correctedText)

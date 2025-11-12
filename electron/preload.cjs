@@ -13,6 +13,7 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
     removeProxy: () => electron_1.ipcRenderer.send('remove_proxy'),
     // 设置相关
     onOpenSettings: (callback) => electron_1.ipcRenderer.on('open-settings', () => callback()),
+    openSettings: () => electron_1.ipcRenderer.send('open-settings'),
     changeWorkspace: (fromSettings = false) => electron_1.ipcRenderer.invoke('change-workspace', fromSettings),
     onTriggerChangeWorkspace: (callback) => electron_1.ipcRenderer.on('trigger-change-workspace', () => callback()),
     // 应用操作

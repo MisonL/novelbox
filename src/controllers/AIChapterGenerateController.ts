@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import Delta from 'quill-delta';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage, ElMessageBox } from '../utils/message';
 import AIService from '../services/aiService';
 import { replaceChapterPromptVariables, replaceFirstChapterPromptVariables } from '../services/promptVariableService';
 import type { Book, Chapter } from '../services/bookConfigService';
@@ -126,8 +126,9 @@ export class AIChapterGenerateController {
 
       let generatedText = '';
 
-      // 执行AI生成
-      this.generationTask.value = await aiService.generateText(prompt, (text: string, _error?: string, complete?: boolean) => {
+      // 执行AI生成：先保存取消函数引用，再开始流式生成
+      this.generationTask.value = { cancel: () => aiService.cancel() };
+      await aiService.generateText(prompt, (text: string, _error?: string, complete?: boolean) => {
         if (_error) {
           ElMessage.error(`AI生成失败：${_error}`);
           this.isGenerating.value = false;
@@ -167,4 +168,4 @@ export class AIChapterGenerateController {
   }
 }
 
-export default AIChapterGenerateController; 
+export default AIChapterGenerateController;

@@ -10,6 +10,7 @@ interface ElectronAPI {
   
   // 设置相关
   onOpenSettings: (callback: () => void) => void;
+  openSettings: () => void;
   changeWorkspace: (fromSettings?: boolean) => Promise<{ success: boolean, path?: string, error?: {message: string, code: string} }>;
   onTriggerChangeWorkspace: (callback: () => void) => void;
   
@@ -58,4 +59,4 @@ interface Window {
       invoke(channel: string, ...args: any[]): Promise<any>
     }
   };
-} 
+}

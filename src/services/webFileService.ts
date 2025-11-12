@@ -96,7 +96,7 @@ export const listFiles = async (dirPath: string) => {
       success: true,
       items: files.map(name => ({
         name,
-        type: 'file'
+        type: 'file' as const
       }))
     }
   } catch (error) {

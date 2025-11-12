@@ -1,11 +1,10 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const electron_1 = require("electron");
-const main_1 = require("@electron/remote/main");
+const electron = require("electron");
+const { enable } = require("@electron/remote/main");
 const path = require("path");
 const fs = require("fs/promises");
 // 强制使用浅色主题，防止应用受系统主题影响
-electron_1.nativeTheme.themeSource = 'light';
+electron.nativeTheme.themeSource = 'light';
 // 存储片段窗口的映射表
 const fragmentWindows = new Map();
 // 存储等待发送的片段数据
@@ -48,9 +47,9 @@ function updateAllWindowsAlwaysOnTop(hasAppFocus) {
 function isMouseInAppWindows() {
     try {
         // 获取当前鼠标在屏幕上的位置
-        const mousePosition = electron_1.screen.getCursorScreenPoint();
+        const mousePosition = electron.screen.getCursorScreenPoint();
         // 检查所有窗口
-        const allWindows = electron_1.BrowserWindow.getAllWindows();
+        const allWindows = electron.BrowserWindow.getAllWindows();
         for (const win of allWindows) {
             if (win.isDestroyed() || !win.isVisible() || win.isMinimized())
                 continue;
@@ -70,11 +69,11 @@ function isMouseInAppWindows() {
     }
 }
 function createWindow() {
-    const win = new electron_1.BrowserWindow({
+    const win = new electron.BrowserWindow({
         width: 1200,
         height: 800,
         webPreferences: {
-            preload: path.join(__dirname, process.env.VITE_DEV_SERVER_URL ? '../dist/electron/preload.js' : './preload.js'),
+            preload: path.join(__dirname, process.env.VITE_DEV_SERVER_URL ? '../dist/electron/preload.cjs' : './preload.cjs'),
             nodeIntegration: false,
             contextIsolation: true,
             webSecurity: true,
@@ -172,7 +171,7 @@ function createWindow() {
         const hasWorkspace = workspacePath !== null;
         const dirExists = hasWorkspace ? await fs.access(workspacePath).then(() => true).catch(() => false) : false;
         if (!hasWorkspace || !dirExists) {
-            const { canceled, filePaths } = await electron_1.dialog.showOpenDialog({
+            const { canceled, filePaths } = await electron.dialog.showOpenDialog({
                 title: '选择工作区目录',
                 properties: ['openDirectory']
             });
@@ -213,7 +212,7 @@ function createWindow() {
             });
         });
     }
-    (0, main_1.enable)(win.webContents);
+    enable(win.webContents);
 }
 // 创建应用菜单
 function createMenu() {
@@ -221,7 +220,7 @@ function createMenu() {
     const template = [
         // { role: 'appMenu' }
         ...(isMac ? [{
-                label: electron_1.app.name,
+                label: electron.app.name,
                 submenu: [
                     { role: 'about', label: '关于' },
                     { type: 'separator' },
@@ -241,7 +240,7 @@ function createMenu() {
                 {
                     label: '更换工作区',
                     click: async () => {
-                        const win = electron_1.BrowserWindow.getFocusedWindow();
+                        const win = electron.BrowserWindow.getFocusedWindow();
                         if (win) {
                             // 直接调用IPC处理函数
                             win.webContents.send('trigger-change-workspace');
@@ -251,7 +250,7 @@ function createMenu() {
                 {
                     label: 'AI配置',
                     click: () => {
-                        const win = electron_1.BrowserWindow.getFocusedWindow();
+                        const win = electron.BrowserWindow.getFocusedWindow();
                         if (win) {
                             win.webContents.send('open-ai-settings');
                         }
@@ -260,7 +259,7 @@ function createMenu() {
                 {
                     label: '全局设置',
                     click: () => {
-                        const win = electron_1.BrowserWindow.getFocusedWindow();
+                        const win = electron.BrowserWindow.getFocusedWindow();
                         if (win) {
                             win.webContents.send('open-settings');
                         }
@@ -281,16 +280,16 @@ function createMenu() {
                         // 在开发环境和打包环境中使用不同的路径
                         let helpPath;
                         if (process.env.NODE_ENV === 'development') {
-                            helpPath = path.join(electron_1.app.getAppPath(), 'public', 'help', 'help.html');
+                            helpPath = path.join(electron.app.getAppPath(), 'public', 'help', 'help.html');
                         }
                         else {
                             // 在打包环境中，使用extraResources路径
                             helpPath = path.join(process.resourcesPath, 'help', 'help.html');
                         }
-                        await electron_1.shell.openPath(helpPath).catch(async (err) => {
+                        await electron.shell.openPath(helpPath).catch(async (err) => {
                             console.error('打开帮助文档失败:', err);
                             // 如果直接打开失败，尝试用默认浏览器打开
-                            await electron_1.shell.openExternal(`file://${  helpPath}`).catch(e => {
+                            await electron.shell.openExternal(`file://${  helpPath}`).catch(e => {
                                 console.error('使用浏览器打开帮助文档失败:', e);
                             });
                         });
@@ -299,13 +298,13 @@ function createMenu() {
                 {
                     label: '访问官网',
                     click: async () => {
-                        await electron_1.shell.openExternal('https://github.com/Rain-31/novelbox');
+                        await electron.shell.openExternal('https://github.com/Rain-31/novelbox');
                     }
                 },
                 {
                     label: '关于',
                     click: async () => {
-                        const win = electron_1.BrowserWindow.getFocusedWindow();
+                        const win = electron.BrowserWindow.getFocusedWindow();
                         if (win) {
                             win.webContents.send('open-about-page');
                         }
@@ -314,49 +313,49 @@ function createMenu() {
             ]
         }
     ];
-    const menu = electron_1.Menu.buildFromTemplate(template);
-    electron_1.Menu.setApplicationMenu(menu);
+    const menu = electron.Menu.buildFromTemplate(template);
+    electron.Menu.setApplicationMenu(menu);
 }
-electron_1.app.whenReady().then(() => {
+electron.app.whenReady().then(() => {
     createWindow();
     createMenu();
     // 注册F12快捷键
-    electron_1.globalShortcut.register('F12', () => {
-        const win = electron_1.BrowserWindow.getFocusedWindow();
+    electron.globalShortcut.register('F12', () => {
+        const win = electron.BrowserWindow.getFocusedWindow();
         if (win) {
             win.webContents.toggleDevTools();
         }
     });
-    electron_1.app.on('activate', () => {
-        if (electron_1.BrowserWindow.getAllWindows().length === 0) {
+    electron.app.on('activate', () => {
+        if (electron.BrowserWindow.getAllWindows().length === 0) {
             createWindow();
         }
     });
 });
-electron_1.app.on('window-all-closed', () => {
+electron.app.on('window-all-closed', () => {
     // 关闭所有片段窗口
     fragmentWindows.forEach((window) => {
         window.close();
     });
     if (process.platform !== 'darwin') {
-        electron_1.app.quit();
+        electron.app.quit();
     }
 });
 // 确保应用退出时关闭所有窗口
-electron_1.app.on('before-quit', () => {
-    electron_1.BrowserWindow.getAllWindows().forEach((window) => {
+electron.app.on('before-quit', () => {
+    electron.BrowserWindow.getAllWindows().forEach((window) => {
         if (!window.isDestroyed()) {
             window.destroy(); // 使用destroy强制关闭
         }
     });
 });
 // 在应用退出时注销所有快捷键
-electron_1.app.on('will-quit', () => {
-    electron_1.globalShortcut.unregisterAll();
+electron.app.on('will-quit', () => {
+    electron.globalShortcut.unregisterAll();
 });
 // 设置代理
-electron_1.ipcMain.on('set_proxy', (event, arg) => {
-    const win = electron_1.BrowserWindow.getFocusedWindow();
+electron.ipcMain.on('set_proxy', (event, arg) => {
+    const win = electron.BrowserWindow.getFocusedWindow();
     if (win) {
         const { http_proxy } = arg;
         // 处理系统代理
@@ -385,8 +384,8 @@ electron_1.ipcMain.on('set_proxy', (event, arg) => {
     }
 });
 // 移除代理
-electron_1.ipcMain.on('remove_proxy', (event) => {
-    const win = electron_1.BrowserWindow.getFocusedWindow();
+electron.ipcMain.on('remove_proxy', (event) => {
+    const win = electron.BrowserWindow.getFocusedWindow();
     if (win) {
         win.webContents.session.setProxy({})
             .then(() => {
@@ -399,11 +398,11 @@ electron_1.ipcMain.on('remove_proxy', (event) => {
     }
 });
 // 导出文件
-electron_1.ipcMain.handle('save-file-as', async (_event, defaultPath) => {
+electron.ipcMain.handle('save-file-as', async (_event, defaultPath) => {
     try {
-        const { canceled, filePath: savePath } = await electron_1.dialog.showSaveDialog({
+        const { canceled, filePath: savePath } = await electron.dialog.showSaveDialog({
             title: '导出文件',
-            defaultPath: defaultPath || path.join(electron_1.app.getPath('documents'), '未命名.docx'),
+            defaultPath: defaultPath || path.join(electron.app.getPath('documents'), '未命名.docx'),
             filters: [
                 { name: 'Word文档', extensions: ['docx'] },
                 { name: '所有文件', extensions: ['*'] }
@@ -420,13 +419,13 @@ electron_1.ipcMain.handle('save-file-as', async (_event, defaultPath) => {
     }
 });
 // 窗口控制
-electron_1.ipcMain.on('minimize-window', (event) => {
-    const win = electron_1.BrowserWindow.fromWebContents(event.sender);
+electron.ipcMain.on('minimize-window', (event) => {
+    const win = electron.BrowserWindow.fromWebContents(event.sender);
     if (win)
         win.minimize();
 });
-electron_1.ipcMain.on('maximize-window', (event) => {
-    const win = electron_1.BrowserWindow.fromWebContents(event.sender);
+electron.ipcMain.on('maximize-window', (event) => {
+    const win = electron.BrowserWindow.fromWebContents(event.sender);
     if (win) {
         if (win.isMaximized()) {
             win.unmaximize();
@@ -436,8 +435,8 @@ electron_1.ipcMain.on('maximize-window', (event) => {
         }
     }
 });
-electron_1.ipcMain.on('close-window', (event) => {
-    const win = electron_1.BrowserWindow.fromWebContents(event.sender);
+electron.ipcMain.on('close-window', (event) => {
+    const win = electron.BrowserWindow.fromWebContents(event.sender);
     if (win) {
         // 确保窗口关闭前清理相关资源
         win.webContents.session.clearCache();
@@ -446,7 +445,7 @@ electron_1.ipcMain.on('close-window', (event) => {
 });
 // 文件操作相关的 IPC 处理程序
 // 读取文件
-electron_1.ipcMain.handle('read-file', async (_event, filePath) => {
+electron.ipcMain.handle('read-file', async (_event, filePath) => {
     try {
         const content = await fs.readFile(filePath, 'utf-8');
         return { success: true, content };
@@ -463,7 +462,7 @@ electron_1.ipcMain.handle('read-file', async (_event, filePath) => {
     }
 });
 // 写入文件
-electron_1.ipcMain.handle('write-file', async (_event, { filePath, content }) => {
+electron.ipcMain.handle('write-file', async (_event, { filePath, content }) => {
     try {
         // 确保目录存在
         await fs.mkdir(path.dirname(filePath), { recursive: true });
@@ -482,7 +481,7 @@ electron_1.ipcMain.handle('write-file', async (_event, { filePath, content }) =>
     }
 });
 // 写入二进制文件
-electron_1.ipcMain.handle('write-blob-file', async (_event, { filePath, buffer }) => {
+electron.ipcMain.handle('write-blob-file', async (_event, { filePath, buffer }) => {
     try {
         // 确保目录存在
         await fs.mkdir(path.dirname(filePath), { recursive: true });
@@ -501,7 +500,7 @@ electron_1.ipcMain.handle('write-blob-file', async (_event, { filePath, buffer }
     }
 });
 // 列出目录内容
-electron_1.ipcMain.handle('list-files', async (_event, dirPath) => {
+electron.ipcMain.handle('list-files', async (_event, dirPath) => {
     try {
         const items = await fs.readdir(dirPath, { withFileTypes: true });
         return {
@@ -524,7 +523,7 @@ electron_1.ipcMain.handle('list-files', async (_event, dirPath) => {
     }
 });
 // 删除文件
-electron_1.ipcMain.handle('delete-file', async (_event, filePath) => {
+electron.ipcMain.handle('delete-file', async (_event, filePath) => {
     try {
         await fs.unlink(filePath);
         return { success: true };
@@ -541,17 +540,17 @@ electron_1.ipcMain.handle('delete-file', async (_event, filePath) => {
     }
 });
 // 获取版本号
-electron_1.ipcMain.handle('get-version', () => {
-    return electron_1.app.getVersion();
+electron.ipcMain.handle('get-version', () => {
+    return electron.app.getVersion();
 });
 // 选择并应用工作区目录
-electron_1.ipcMain.handle('change-workspace', async (event, fromSettings = false) => {
+electron.ipcMain.handle('change-workspace', async (event, fromSettings = false) => {
     try {
-        const win = electron_1.BrowserWindow.fromWebContents(event.sender);
+        const win = electron.BrowserWindow.fromWebContents(event.sender);
         if (!win) {
             return { success: false, message: '无法获取窗口实例' };
         }
-        const { canceled, filePaths } = await electron_1.dialog.showOpenDialog({
+        const { canceled, filePaths } = await electron.dialog.showOpenDialog({
             title: '选择工作区目录',
             properties: ['openDirectory']
         });
@@ -582,11 +581,11 @@ electron_1.ipcMain.handle('change-workspace', async (event, fromSettings = false
     }
 });
 // 打开外部链接
-electron_1.ipcMain.on('open-external', (_event, url) => {
-    electron_1.shell.openExternal(url);
+electron.ipcMain.on('open-external', (_event, url) => {
+    electron.shell.openExternal(url);
 });
 // 创建片段编辑窗口
-electron_1.ipcMain.handle('create-fragment-window', async (_event, fragment) => {
+electron.ipcMain.handle('create-fragment-window', async (_event, fragment) => {
     try {
         // 检查窗口是否已经存在
         if (fragmentWindows.has(fragment.id)) {
@@ -601,7 +600,7 @@ electron_1.ipcMain.handle('create-fragment-window', async (_event, fragment) => 
             fragment.title = '新片段';
         }
         // 创建新窗口 - 极简样式
-        const fragmentWindow = new electron_1.BrowserWindow({
+        const fragmentWindow = new electron.BrowserWindow({
             width: 550,
             height: 350,
             frame: false, // 无边框窗口
@@ -613,7 +612,7 @@ electron_1.ipcMain.handle('create-fragment-window', async (_event, fragment) => 
             alwaysOnTop: true, // 窗口始终保持在最前面
             transparent: true, // 添加透明支持
             webPreferences: {
-                preload: path.join(__dirname, process.env.VITE_DEV_SERVER_URL ? '../dist/electron/preload.js' : './preload.js'),
+                preload: path.join(__dirname, process.env.VITE_DEV_SERVER_URL ? '../dist/electron/preload.cjs' : './preload.cjs'),
                 nodeIntegration: false,
                 contextIsolation: true,
                 webSecurity: true,
@@ -668,7 +667,7 @@ electron_1.ipcMain.handle('create-fragment-window', async (_event, fragment) => 
             }
         });
         // 获取主窗口
-        const mainWindows = electron_1.BrowserWindow.getAllWindows().filter(win => !fragmentWindows.has(win.id.toString()));
+        const mainWindows = electron.BrowserWindow.getAllWindows().filter(win => !fragmentWindows.has(win.id.toString()));
         const mainWindow = mainWindows.length > 0 ? mainWindows[0] : null;
         // 如果主窗口已最小化，则新创建的片段窗口也应该最小化
         if (mainWindow && mainWindow.isMinimized()) {
@@ -745,7 +744,7 @@ electron_1.ipcMain.handle('create-fragment-window', async (_event, fragment) => 
     }
 });
 // 更新片段窗口内容
-electron_1.ipcMain.handle('update-fragment-content', async (_event, fragment) => {
+electron.ipcMain.handle('update-fragment-content', async (_event, fragment) => {
     try {
         // 检查窗口是否存在
         if (!fragmentWindows.has(fragment.id)) {
@@ -792,7 +791,7 @@ electron_1.ipcMain.handle('update-fragment-content', async (_event, fragment) =>
     }
 });
 // 新增：响应渲染进程请求片段数据
-electron_1.ipcMain.handle('request-fragment-data', (_event, windowId) => {
+electron.ipcMain.handle('request-fragment-data', (_event, windowId) => {
     try {
         // 获取为该窗口保存的片段数据
         const fragment = pendingFragmentData.get(windowId);
@@ -801,7 +800,7 @@ electron_1.ipcMain.handle('request-fragment-data', (_event, windowId) => {
             return { success: false, message: '没有找到对应的片段数据' };
         }
         // 获取发出请求的窗口
-        const win = electron_1.BrowserWindow.fromId(windowId);
+        const win = electron.BrowserWindow.fromId(windowId);
         if (!win) {
             console.error('没有找到对应的窗口:', windowId);
             return { success: false, message: '没有找到对应的窗口' };
@@ -822,39 +821,39 @@ electron_1.ipcMain.handle('request-fragment-data', (_event, windowId) => {
     }
 });
 // 获取当前窗口ID
-electron_1.ipcMain.handle('get-current-window-id', (event) => {
-    const win = electron_1.BrowserWindow.fromWebContents(event.sender);
+electron.ipcMain.handle('get-current-window-id', (event) => {
+    const win = electron.BrowserWindow.fromWebContents(event.sender);
     if (!win) {
         return { success: false, message: '无法获取窗口ID' };
     }
     return { success: true, id: win.id };
 });
 // 关闭片段窗口
-electron_1.ipcMain.on('close-fragment-window', (_event, fragmentId) => {
+electron.ipcMain.on('close-fragment-window', (_event, fragmentId) => {
     const fragmentWindow = fragmentWindows.get(fragmentId);
     if (fragmentWindow && !fragmentWindow.isDestroyed()) {
         fragmentWindow.close();
     }
 });
 // 关闭当前窗口
-electron_1.ipcMain.on('close-current-window', (event) => {
-    const win = electron_1.BrowserWindow.fromWebContents(event.sender);
+electron.ipcMain.on('close-current-window', (event) => {
+    const win = electron.BrowserWindow.fromWebContents(event.sender);
     if (win && !win.isDestroyed()) {
         win.close();
     }
 });
 // 最小化片段窗口
-electron_1.ipcMain.on('minimize-fragment-window', (_event, fragmentId) => {
+electron.ipcMain.on('minimize-fragment-window', (_event, fragmentId) => {
     const fragmentWindow = fragmentWindows.get(fragmentId);
     if (fragmentWindow && !fragmentWindow.isDestroyed()) {
         fragmentWindow.minimize();
     }
 });
 // 保存片段内容
-electron_1.ipcMain.handle('save-fragment-content', async (_event, fragment) => {
+electron.ipcMain.handle('save-fragment-content', async (_event, fragment) => {
     try {
         // 将保存事件广播到主窗口，让主窗口进行数据存储
-        electron_1.BrowserWindow.getAllWindows().forEach(win => {
+        electron.BrowserWindow.getAllWindows().forEach(win => {
             // 排除片段窗口本身
             if (!fragmentWindows.has(fragment.id) || win !== fragmentWindows.get(fragment.id)) {
                 win.webContents.send('fragment-saved', fragment);
@@ -876,17 +875,17 @@ electron_1.ipcMain.handle('save-fragment-content', async (_event, fragment) => {
 // 处理窗口拖动
 // 由于无边框窗口需要自定义拖动，我们使用CSS的-webkit-app-region: drag替代
 // 在HTML元素上添加这个CSS属性即可实现拖动，不需要额外的JS处理
-electron_1.ipcMain.on('window-drag', (event) => {
-    const win = electron_1.BrowserWindow.fromWebContents(event.sender);
+electron.ipcMain.on('window-drag', (event) => {
+    const win = electron.BrowserWindow.fromWebContents(event.sender);
     if (win) {
         win.moveTop(); // 确保窗口在最前面
     }
 });
 // 处理从片段窗口发送到主窗口的消息
-electron_1.ipcMain.on('send-to-main-window', (_event, channel, ...args) => {
+electron.ipcMain.on('send-to-main-window', (_event, channel, ...args) => {
     try {
         // 获取所有非片段窗口（主窗口）
-        const mainWindows = electron_1.BrowserWindow.getAllWindows().filter(win => {
+        const mainWindows = electron.BrowserWindow.getAllWindows().filter(win => {
             // 检查窗口ID是否在fragmentWindows映射中
             const isFragmentWindow = Array.from(fragmentWindows.values()).some(fw => fw.id === win.id);
             return !isFragmentWindow;

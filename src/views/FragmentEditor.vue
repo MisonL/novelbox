@@ -345,7 +345,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from '../utils/message'
 import { convertChatMessagesToMultiTurn } from '../services/promptVariableService'
 import AIService from '../services/aiService'
 import { AIConfigService } from '../services/aiConfigService'
@@ -1261,16 +1261,19 @@ onMounted(async () => {
     }
   };
 
-  // 注册监听器
-  window.electronAPI.onFragmentData(dataHandler);
+  // 注册监听器（仅在 Electron 环境中）
+  if (window.electronAPI && typeof window.electronAPI.onFragmentData === 'function') {
+    window.electronAPI.onFragmentData(dataHandler);
+  }
 
-  // 注册内容更新监听器
-  window.electronAPI.onContentUpdate((data: any) => {
-    // 如果ID不匹配，忽略此更新
-    if (data.id !== fragment.value.id) {
-      console.log('ID不匹配，忽略更新:', data.id, fragment.value.id);
-      return;
-    }
+  // 注册内容更新监听器（仅在 Electron 环境中）
+  if (window.electronAPI && typeof window.electronAPI.onContentUpdate === 'function') {
+    window.electronAPI.onContentUpdate((data: any) => {
+      // 如果ID不匹配，忽略此更新
+      if (data.id !== fragment.value.id) {
+        console.log('ID不匹配，忽略更新:', data.id, fragment.value.id);
+        return;
+      }
 
     // 更新内容
     fragment.value.content = data.content || fragment.value.content;
@@ -1300,9 +1303,10 @@ onMounted(async () => {
 
     // 注意：不再需要更新重新生成按钮状态，因为按钮已被移除
 
-    // 更新时间戳
-    fragment.value.updatedAt = new Date();
-  });
+      // 更新时间戳
+      fragment.value.updatedAt = new Date();
+    });
+  }
 
   // 注册聊天回复监听器
   try {

@@ -12,32 +12,45 @@ if (typeof globalThis.process === 'undefined') {
 
 import { createApp } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
 import './style.css'
 import App from './App.vue'
-import NovelEditor from './views/NovelEditor.vue'
-import BookLibrary from './views/BookLibrary.vue'
-import FragmentEditor from './views/FragmentEditor.vue'
 import { initMacOSFixes } from './macOS-fix'
+
+// Element Plus
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+
+// 预加载关键组件
+const BookLibrary = () => import('./views/BookLibrary.vue')
+const NovelEditor = () => import('./views/NovelEditor.vue')
+const FragmentEditor = () => import('./views/FragmentEditor.vue')
 
 const router = createRouter({
   history: createWebHashHistory(),
   routes: [
     {
       path: '/',
-      component: BookLibrary
+      component: BookLibrary,
+      // 预加载策略
+      meta: { preload: true }
     },
     {
-      path: '/editor',
+      path: '/novel-editor/:id?',
       component: NovelEditor
     },
     {
       path: '/fragment-editor',
       component: FragmentEditor
-    }
+    },
   ]
 })
+
+// 预加载关键路由
+if (router.currentRoute.value.path === '/') {
+  NovelEditor()
+  FragmentEditor()
+}
 
 // 添加路由变化监听，设置HTML的data-route属性
 router.beforeEach((to, _from, next) => {
@@ -50,17 +63,13 @@ router.beforeEach((to, _from, next) => {
 
 const app = createApp(App)
 
-// Element Plus configuration for macOS
-app.use(ElementPlus, {
-  // macOS specific settings
-  zIndex: 3000,
-  size: 'default',
-  button: {
-    autoInsertSpace: true
-  }
-})
-
 app.use(router)
+app.use(ElementPlus)
+
+// 注册所有 Element Plus 图标
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(key, component)
+}
 
 // 初始化macOS UI修复
 initMacOSFixes()

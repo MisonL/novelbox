@@ -1,6 +1,6 @@
 // 移除全局声明，我们将在代码中进行运行时检查
 import { Ref, ref } from 'vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage } from '../utils/message';
 import AIService from '../services/aiService';
 import { AIConfigService } from '../services/aiConfigService';
 import { type Book } from '../services/bookConfigService';
@@ -168,7 +168,7 @@ export default class FloatingToolbarController {
     });
 
     setTimeout(() => {
-      const input = document.querySelector('.rewrite-input') as HTMLInputElement;
+      const input = document.querySelector('.rewrite-input') as HTMLElement;
       if (input) {
         input.focus();
       }
@@ -410,12 +410,9 @@ export default class FloatingToolbarController {
         };
         
         // 开始生成
-        const response = await aiService.generateText(prompt, streamCallback);
-        
-        // 保存任务引用，以便可以取消
-        if ('cancel' in response) {
-          this.generationTasks.set(fragmentId, { abort: response.cancel });
-        }
+        await aiService.generateText(prompt, streamCallback);
+        // 保存任务引用，以便可以取消（使用 AIService.cancel）
+        this.generationTasks.set(fragmentId, { abort: () => aiService.cancel() });
         
       } catch (error) {
         console.error('发送AI请求失败:', error);
@@ -630,21 +627,14 @@ export default class FloatingToolbarController {
       };
       
       // 使用流式请求 - AIService内部会创建自己的AbortController
-      const response = await aiService.generateText(prompt, streamCallback);
+      await aiService.generateText(prompt, streamCallback);
       
-      // 保存生成任务的cancel函数，以便后续可以调用停止生成
-      if ('cancel' in response) {
-        this.generationTasks.set(fragmentId, {
-          abort: () => {
-            response.cancel();
-          }
-        });
-      }
-      
-      if ('error' in response && response.error) {
-        ElMessage.error(`AI扩写失败：${response.error}`);
-        console.error('AI扩写失败:', response.error);
-      }
+      // 保存生成任务的中止函数，统一通过 AIService.cancel
+      this.generationTasks.set(fragmentId, {
+        abort: () => {
+          aiService.cancel();
+        }
+      });
     } catch (error) {
       console.error('AI扩写失败:', error);
       ElMessage.error('AI扩写失败，请检查网络连接和API配置');
@@ -732,21 +722,14 @@ export default class FloatingToolbarController {
       };
       
       // 使用流式请求 - AIService内部会创建自己的AbortController
-      const response = await aiService.generateText(prompt, streamCallback);
+      await aiService.generateText(prompt, streamCallback);
       
       // 保存生成任务的cancel函数，以便后续可以调用停止生成
-      if ('cancel' in response) {
-        this.generationTasks.set(fragmentId, {
-          abort: () => {
-            response.cancel();
-          }
-        });
-      }
-      
-      if ('error' in response && response.error) {
-        ElMessage.error(`AI缩写失败：${response.error}`);
-        console.error('AI缩写失败:', response.error);
-      }
+      this.generationTasks.set(fragmentId, {
+        abort: () => {
+          aiService.cancel();
+        }
+      });
     } catch (error) {
       console.error('AI缩写失败:', error);
       ElMessage.error('AI缩写失败，请检查网络连接和API配置');
@@ -848,21 +831,13 @@ export default class FloatingToolbarController {
         };
         
         // 使用流式请求 - AIService内部会创建自己的AbortController
-        const response = await aiService.generateText(prompt, streamCallback);
-        
-        // 保存生成任务的cancel函数，以便后续可以调用停止生成
-        if ('cancel' in response) {
-          this.generationTasks.set(fragmentId, {
-            abort: () => {
-              response.cancel();
-            }
-          });
-        }
-        
-        if ('error' in response && response.error) {
-          ElMessage.error(`AI改写失败：${response.error}`);
-          console.error('AI改写失败:', response.error);
-        }
+        await aiService.generateText(prompt, streamCallback);
+        // 保存生成任务的取消方法（基于 AIService 实例）
+        this.generationTasks.set(fragmentId, {
+          abort: () => {
+            aiService.cancel();
+          }
+        });
       } catch (error) {
         console.error('AI改写失败:', error);
         ElMessage.error('AI改写失败，请检查网络连接和API配置');
@@ -946,4 +921,4 @@ export default class FloatingToolbarController {
       console.log(`未找到生成任务: ${fragmentId}`);
     }
   }
-} 
+}

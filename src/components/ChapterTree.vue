@@ -482,42 +482,165 @@ const exportWord = async () => {
 
 <style scoped>
 .chapter-tree {
-  @apply bg-white rounded-lg shadow p-4 h-full overflow-hidden flex flex-col;
+  @apply bg-white rounded-2xl shadow-lg h-full overflow-hidden flex flex-col;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(10px);
+  padding: 1.5rem;
+  margin: 0.5rem;
 }
 
 .header-row {
-  @apply flex items-center justify-between mb-4;
+  @apply flex items-center justify-between mb-6 pb-4 border-b border-gray-100/70;
+  align-items: center;
+  position: relative;
+}
+
+.header-row:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -1rem;
+  right: -1rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.05), transparent);
 }
 
 .action-buttons {
-  @apply flex gap-2;
+  @apply flex gap-3;
 }
 
 .action-button {
-  @apply flex items-center justify-center w-8 h-8 rounded-full border border-gray-300;
+  @apply flex items-center justify-center w-10 h-10 rounded-xl border border-gray-200/80 bg-white/90 hover:bg-white hover:border-gray-300 transition-all duration-200;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+  transform: translateY(0);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-button:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.03), rgba(147, 197, 253, 0.03));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: inherit;
+}
+
+.action-button:hover {
+  @apply transform scale-105 shadow-lg;
+  border-color: rgba(59, 130, 246, 0.15);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.action-button:hover:before {
+  opacity: 1;
+}
+
+.action-button:active {
+  transform: scale(0.98);
 }
 
 .custom-tree {
-  @apply flex-1 overflow-auto;
+  @apply flex-1 overflow-auto bg-gray-50/30 rounded-xl;
+  flex: 1 1 auto;
+  min-height: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(5px);
 }
 
 .custom-tree-node {
-  @apply flex items-center justify-between w-full;
+  @apply flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-gray-50/70 transition-all duration-200;
+  align-items: center;
+  min-height: 52px;
+  position: relative;
+  border-radius: 12px;
+}
+
+.custom-tree-node:hover {
+  @apply bg-gray-50/80 shadow-sm;
+}
+
+.custom-tree-node:active {
+  @apply bg-blue-50/60;
 }
 
 .node-content {
   @apply flex-1 mr-4;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .node-actions {
-  @apply flex gap-2;
+  @apply flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200;
 }
 
 :deep(.el-tree-node__content) {
-  @apply h-auto min-h-[40px] py-1;
+  @apply h-auto min-h-[52px] py-2 px-0;
+  align-items: center;
 }
 
 :deep(.el-button--small) {
-  @apply px-2 py-1 text-xs;
+  @apply px-2 py-1 text-xs min-w-[28px] h-[28px] inline-flex items-center justify-center;
+}
+
+:deep(.el-tree-node) {
+  @apply transition-all duration-200;
+}
+
+:deep(.el-tree-node:hover) {
+  @apply bg-gray-50/80;
+}
+
+:deep(.el-tree-node.is-current) {
+  @apply bg-blue-50/70 shadow-sm;
+}
+
+:deep(.el-tree-node.is-current .el-tree-node__content) {
+  @apply bg-blue-50/70;
+}
+
+:deep(.el-tree-node.is-current) {
+  border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+/* 优化响应式布局 */
+@media (max-width: 768px) {
+  .chapter-tree {
+    @apply p-4;
+  }
+  
+  .header-row {
+    @apply mb-4 pb-3;
+  }
+  
+  .action-buttons {
+    @apply gap-2;
+  }
+  
+  .action-button {
+    @apply w-9 h-9;
+  }
+}
+
+@media (max-width: 640px) {
+  .chapter-tree {
+    @apply p-3;
+  }
+  
+  .header-row {
+    @apply flex-col items-start gap-3;
+  }
+  
+  .action-buttons {
+    @apply self-end;
+  }
 }
 </style>

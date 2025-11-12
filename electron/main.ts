@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, dialog, Menu, shell, globalShortcut, scree
 import { enable } from '@electron/remote/main'
 import * as path from 'path'
 import * as fs from 'fs/promises';
+import { Buffer } from 'buffer'
 
 // 强制使用浅色主题，防止应用受系统主题影响
 nativeTheme.themeSource = 'light'
@@ -33,7 +34,11 @@ function updateAllWindowsAlwaysOnTop(hasAppFocus: boolean) {
             window.hide();
           }
         } catch (e) {
-          console.error('隐藏窗口失败:', e);
+          // 隐藏窗口失败时的错误处理
+          // 在生产环境中可以通过其他方式记录错误
+          if (process.env.NODE_ENV !== 'production') {
+            console.error('隐藏窗口失败:', e);
+          }
         }
       } else {
         // 应用获得焦点时，恢复所有片段窗口
@@ -321,7 +326,7 @@ function createMenu() {
           click: async () => {
             // 打开帮助文档
             // 在开发环境和打包环境中使用不同的路径
-            let helpPath;
+            let helpPath: string;
             if (process.env.NODE_ENV === 'development') {
               helpPath = path.join(app.getAppPath(), 'public', 'help', 'help.html');
             } else {
@@ -647,6 +652,14 @@ ipcMain.handle('change-workspace', async (event, fromSettings = false) => {
 // 打开外部链接
 ipcMain.on('open-external', (_event, url: string) => {
   shell.openExternal(url);
+});
+
+// 统一处理来自渲染进程的打开设置请求
+ipcMain.on('open-settings', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender) || BrowserWindow.getFocusedWindow();
+  if (win) {
+    win.webContents.send('open-settings');
+  }
 });
 
 // 创建片段编辑窗口

@@ -57,7 +57,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage } from '../utils/message'
 import AIService from '../services/aiService'
 import { replacePromptVariables } from '../services/promptVariableService'
 import { AIConfigService } from '../services/aiConfigService'
@@ -120,14 +120,8 @@ const generateAIContent = async () => {
     }
 
     const prompt = await replacePromptVariables(props.currentBook, parseInt(chapterNumber.value), detailContent.value)
-    const response = await aiService.generateText(prompt)
-    if (response.error) {
-      console.error('AI生成失败:', response.error)
-      ElMessage.error(`AI生成失败：${response.error}`)
-      return
-    }
-
-    detailContent.value = response.text || ''
+    const result = await aiService.generateText(prompt)
+    detailContent.value = result || ''
     saveContent()
   } catch (error) {
     console.error('AI生成失败:', error)

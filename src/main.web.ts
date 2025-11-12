@@ -1,8 +1,7 @@
 import './buffer-polyfill'
 import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
+// element-plus已移除，使用轻量级UI组件
 import './style.css'
 import App from './App.vue'
 import { initMacOSFixes } from './macOS-fix'
@@ -30,6 +29,10 @@ const createWebAPI = () => {
     onOpenSettings: (callback: () => void) => {
       // 监听设置打开事件
       window.addEventListener('open-settings', callback)
+    },
+    openSettings: () => {
+      // 触发打开设置事件
+      window.dispatchEvent(new CustomEvent('open-settings'))
     },
     
     changeWorkspace: async (_fromSettings = false) => {
@@ -184,7 +187,6 @@ router.beforeEach((to, _from, next) => {
 // 创建应用
 const app = createApp(App)
 app.use(router)
-app.use(ElementPlus)
 
 // 挂载Web API到全局对象
 window.electronAPI = createWebAPI()

@@ -1,4 +1,6 @@
-import { defineConfig } from 'vite'
+/// <reference types="node" />
+import { defineConfig, type UserConfig, type ConfigEnv } from 'vite'
+// @ts-ignore: IDE 类型解析可能缺少 @vitejs/plugin-vue 的声明
 import vue from '@vitejs/plugin-vue'
 // import legacy from '@vitejs/plugin-legacy'
 import { resolve } from 'path'
@@ -8,9 +10,9 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = resolve(__filename, '..')
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   // Web版本始终使用根路径作为base
-  return {
+  const config: UserConfig = {
     plugins: [
       vue(),
       // legacy({
@@ -66,10 +68,8 @@ export default defineConfig(({ mode }) => {
             'element-plus': ['element-plus', '@element-plus/icons-vue'],
             // 编辑器相关
             'editor': ['quill', 'quill-delta', '@vueup/vue-quill'],
-            // AI相关
-            'ai-vendor': ['openai', '@anthropic-ai/sdk', '@google/generative-ai'],
             // 工具库
-            'utils': ['axios', 'uuid', 'diff-match-patch'],
+            'utils': ['uuid', 'diff-match-patch'],
             // 文档处理
             'docx': ['docx', 'html-to-text']
           }
@@ -81,12 +81,12 @@ export default defineConfig(({ mode }) => {
       cssCodeSplit: true,
       sourcemap: false,
       minify: 'terser',
-      terserOptions: {
+      terserOptions: ({
         compress: {
           drop_console: true,
           drop_debugger: true
         }
-      }
+      } as any)
     },
     optimizeDeps: {
       esbuildOptions: {
@@ -98,7 +98,7 @@ export default defineConfig(({ mode }) => {
         plugins: [
           {
             name: 'ignore-node-modules',
-            setup(build) {
+            setup(build: import('esbuild').PluginBuild) {
               build.onResolve({ filter: /^(timers|stream|crypto|net|tls|fs|path|util)$/ }, () => {
                 return { path: 'empty-module', external: true }
               })
@@ -145,4 +145,5 @@ export default defineConfig(({ mode }) => {
       strictPort: true
     }
   }
+  return config
 })

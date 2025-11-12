@@ -1,6 +1,12 @@
 <template>
   <div class="app-container">
-    <router-view />
+    <transition
+      name="page"
+      mode="out-in"
+      appear
+    >
+      <router-view />
+    </transition>
     <AIConfigModal v-model:show-a-i-config-modal="showAIConfigModal" />
     <div
       v-if="showAbout"
@@ -40,9 +46,7 @@ const showAbout = ref(false)
 const showSettings = ref(false)
 
 onMounted(() => {
-  // 检查是否在Web环境中
-  const isWeb = import.meta.env.__IS_WEB__ || false
-  
+  // 根据是否存在 electronAPI 来区分环境
   if (window.electronAPI) {
     // Electron环境
     window.electronAPI.onOpenAISettings(() => {
@@ -79,8 +83,8 @@ onMounted(() => {
         }
       })
     }
-  } else if (isWeb) {
-    // Web环境 - 使用事件监听
+  } else {
+    // 非 Electron 环境（浏览器 dev/preview）- 使用事件监听
     window.addEventListener('open-ai-settings', () => {
       showAIConfigModal.value = true
     })
@@ -134,7 +138,31 @@ function closeSettings() {
 <style scoped>
 .app-container {
   @apply h-screen w-full overflow-hidden flex flex-col;
+  padding: 2rem !important;
+  box-sizing: border-box !important;
 }
+
+/* 页面过渡动画 */
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.page-enter-from.page-leave-active {
+  opacity: 0;
+  transform: translateX(0);
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -143,7 +171,9 @@ function closeSettings() {
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 9999;
+  transition: opacity 0.3s ease;
 }
+
 .modal {
   position: fixed;
   top: 50%;
@@ -153,6 +183,7 @@ function closeSettings() {
   margin: 0;
   max-height: 90vh;
   max-width: 90vw;
+  transition: all 0.3s ease;
 }
 
 /* 最小化的片段样式 */
@@ -180,12 +211,41 @@ function closeSettings() {
 }
 
 .minimized-fragment-item:hover {
-  transform: translateY(-3px);
+  transform: translateY(-3px) scale(1.1);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 .minimized-icon {
   font-weight: bold;
   font-size: 14px;
+}
+
+/* 全局加载动画 */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>

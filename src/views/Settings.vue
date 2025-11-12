@@ -1009,41 +1009,34 @@ input[type="text"]:focus {
 }
 
 .action-button {
-  padding: 14px 24px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 16px;
-  transition: all 0.2s;
-  min-width: 120px;
+  @apply px-6 py-3 text-sm font-semibold border-none cursor-pointer min-w-[120px] transition-all duration-300 ease-in-out transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl;
 }
 
 .export-button {
-  background-color: #4caf50;
-  color: white;
+  @apply bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700;
 }
 
 .export-button:hover {
-  background-color: #45a049;
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
 }
 
 .import-button {
-  background-color: #2196f3;
-  color: white;
+  @apply bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700;
 }
 
 .import-button:hover {
-  background-color: #1976d2;
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
 }
 
 .clear-button {
-  background-color: #f44336;
-  color: white;
+  @apply bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl hover:from-red-600 hover:to-rose-700;
 }
 
 .clear-button:hover {
-  background-color: #d32f2f;
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
 }
 
 .setting-warning {
@@ -1095,30 +1088,30 @@ input[type="text"]:focus {
 }
 
 .test-button {
-  background-color: #ff9800;
-  color: white;
+  @apply bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl hover:from-orange-600 hover:to-amber-700 transition-all duration-300 ease-in-out transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl;
 }
 
 .test-button:hover {
-  background-color: #f57c00;
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
 }
 
 .save-button {
-  background-color: #4caf50;
-  color: white;
+  @apply bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 ease-in-out transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl;
 }
 
 .save-button:hover {
-  background-color: #45a049;
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
 }
 
 .reset-button {
-  background-color: #9e9e9e;
-  color: white;
+  @apply bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-300 ease-in-out transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl;
 }
 
 .reset-button:hover {
-  background-color: #757575;
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 8px 25px rgba(107, 114, 128, 0.3);
 }
 
 .setting-message {

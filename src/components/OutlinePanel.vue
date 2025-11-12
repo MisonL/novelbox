@@ -112,7 +112,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage } from '../utils/message'
 import AIService from '../services/aiService'
 import { BookConfigService } from '../services/bookConfigService'
 import { AIConfigService } from '../services/aiConfigService'
@@ -173,14 +173,8 @@ const updateSettings = async () => {
       prompt = await replaceUpdateSettingsPromptVariables(props.currentBook, settingContent.value)
     }
 
-    const response = await aiService.generateText(prompt)
-    if (response.error) {
-      console.error('AI生成失败:', response.error)
-      ElMessage.error(`AI生成失败：${response.error}`)
-      return
-    }
-
-    settingContent.value = `${settingContent.value}\n>>>>>>>>>>>>>>>>>>>>>>>>>>>\n${response.text}`
+    const result = await aiService.generateText(prompt)
+    settingContent.value = `${settingContent.value}\n>>>>>>>>>>>>>>>>>>>>>>>>>>>\n${result}`
     saveContent()
   } catch (error) {
     console.error('AI生成失败:', error)
@@ -216,17 +210,11 @@ const generateAIContent = async (type: 'setting' | 'plot') => {
       ? await replaceSettingsPromptVariables(currentBook, content)
       : await replaceOutlinePromptVariables(currentBook, content)
     
-    const response = await aiService.generateText(prompt)
-    if (response.error) {
-      console.error('AI生成失败:', response.error)
-      ElMessage.error(`AI生成失败：${response.error}`)
-      return
-    }
-
+    const result = await aiService.generateText(prompt)
     if (type === 'setting') {
-      settingContent.value = response.text || ''
+      settingContent.value = result || ''
     } else {
-      plotContent.value = response.text || ''
+      plotContent.value = result || ''
     }
     saveContent()
   } catch (error) {

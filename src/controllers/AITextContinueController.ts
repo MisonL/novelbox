@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import Delta from 'quill-delta';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage, ElMessageBox } from '../utils/message';
 import AIService from '../services/aiService';
 import { replaceContinuePromptVariables } from '../services/promptVariableService';
 import type { Book, Chapter } from '../services/bookConfigService';
@@ -125,7 +125,7 @@ export class AITextContinueController {
     }
 
     // 如果输入框有焦点，先让它失去焦点
-    const continueInput = document.querySelector('.continue-input') as HTMLInputElement;
+    const continueInput = document.querySelector('.continue-input') as HTMLElement;
     if (document.activeElement === continueInput) {
       continueInput.blur();
     }
@@ -186,16 +186,13 @@ export class AITextContinueController {
     return await ElMessageBox({
       title: '续写位置',
       message: '请选择续写位置',
-      showCancelButton: true,
+      showCancel: true,
       confirmButtonText: '当前位置',
       cancelButtonText: '章节末尾',
       type: 'info',
-      center: true,
-      customClass: 'continue-position-dialog',
-      showClose: true,
-      closeOnClickModal: false,
-      closeOnPressEscape: true,
-      distinguishCancelAndClose: true
+      // center 选项在当前 MessageBoxOptions 中未定义，移除
+      // customClass 在当前 MessageBoxOptions 中未定义，移除
+      // 移除不受支持的选项：showClose/closeOnClickModal/closeOnPressEscape/distinguishCancelAndClose
     }).catch((action) => {
       return action;
     });
@@ -262,8 +259,9 @@ export class AITextContinueController {
       let generatedText = '';
       this.isGenerating.value = true;
 
-      // 直接保存生成任务的引用
-      this.generationTask.value = await aiService.generateText(prompt, (text: string, error?: string, complete?: boolean) => {
+      // 直接保存生成任务的引用，然后开始流式生成
+      this.generationTask.value = { cancel: () => aiService.cancel() };
+      await aiService.generateText(prompt, (text: string, error?: string, complete?: boolean) => {
         if (error) {
           ElMessage.error(`AI续写失败：${error}`);
           this.isGenerating.value = false;
@@ -315,4 +313,4 @@ export class AITextContinueController {
   }
 }
 
-export default AITextContinueController; 
+export default AITextContinueController;

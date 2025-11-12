@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // 设置相关
   onOpenSettings: (callback: () => void) => ipcRenderer.on('open-settings', () => callback()),
+  openSettings: () => ipcRenderer.send('open-settings'),
   changeWorkspace: (fromSettings = false) => ipcRenderer.invoke('change-workspace', fromSettings),
   onTriggerChangeWorkspace: (callback: () => void) => ipcRenderer.on('trigger-change-workspace', () => callback()),
 

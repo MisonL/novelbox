@@ -8,6 +8,7 @@ declare interface Window {
     
     // 设置相关
     onOpenSettings: (callback: () => void) => void;
+    openSettings: () => void;
     changeWorkspace: (fromSettings?: boolean) => Promise<{ success: boolean; path?: string; message?: string }>;
     onTriggerChangeWorkspace: (callback: () => void) => void;
     

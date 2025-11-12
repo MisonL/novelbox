@@ -139,7 +139,7 @@ import { QuillEditor } from '@vueup/vue-quill'
 import Searcher from './Searcher.vue'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 import OutlineDetail from './OutlineDetail.vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage } from '../utils/message'
 import Delta from 'quill-delta';
 import { type Book, type Chapter } from '../services/bookConfigService'
 import Proofreader from './Proofreader.vue'

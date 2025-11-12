@@ -36,11 +36,12 @@ export interface Book {
 export class BookConfigService {
   private static getBooksDir(): string {
     const workspacePath = WorkspaceService.getWorkspacePath();
-    return `${workspacePath}\\books`;
+    // 使用 Web 友好的路径分隔符
+    return `${workspacePath}/books`;
   }
 
   private static getBookPath(bookId: string): string {
-    return `${this.getBooksDir()}\\${bookId}.json`;
+    return `${this.getBooksDir()}/${bookId}.json`;
   }
 
   static async saveBook(book: Book): Promise<void> {

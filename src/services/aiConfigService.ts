@@ -42,7 +42,8 @@ type AIConfig = {
 export class AIConfigService {
   private static getConfigPath(): string {
     const workspacePath = WorkspaceService.getWorkspacePath();
-    return `${workspacePath}\\config\\aiconfig.json`;
+    // 使用 Web 友好的路径分隔符
+    return `${workspacePath}/config/aiconfig.json`;
   }
 
   static async saveConfig(provider: string, config: ProviderConfig | GlobalConfig): Promise<void> {

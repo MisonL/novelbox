@@ -36,7 +36,7 @@ export class DocumentService {
                     { selector: 'br', format: 'lineBreak' }
                 ]
             });
-            
+
             // 分割文本为段落，保留空行
             const contentParagraphs = plainText.split('\n');
             let emptyLineCount = 0;
@@ -56,9 +56,9 @@ export class DocumentService {
                     }
                 } else {
                     emptyLineCount = 0;
-                    
+
                     // 检查是否有全角空格缩进（编辑器使用的是全角空格）
-                    const fullWidthIndent = p.match(/^(　+)/);
+                    const fullWidthIndent = p.match(new RegExp('^(\\u3000+)'));
                     // 检查是否有普通空格缩进
                     const normalIndent = p.match(/^( +)/);
                     
@@ -143,7 +143,7 @@ export class DocumentService {
             return filePath;
         } catch (error) {
             console.error('导出Word文档失败:', error);
-            throw new Error(`导出Word文档失败:${  error}`);
+            throw new Error(`导出Word文档失败:${error}`);
         }
     }
 }

@@ -20,7 +20,8 @@ type PromptConfig = {
 export class PromptConfigService {
   private static getConfigPath(): string {
     const workspacePath = WorkspaceService.getWorkspacePath();
-    return `${workspacePath}\\config\\promptconfig.json`;
+    // 使用 Web 友好的路径分隔符
+    return `${workspacePath}/config/promptconfig.json`;
   }
 
   static async getPromptByName(name: keyof PromptConfig): Promise<string> {

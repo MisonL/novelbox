@@ -32,7 +32,7 @@ mac:
   gatekeeperAssess: false
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
-  asar: false
+  asar: true
 dmg:
   title: NovelBox 安装程序
   icon: public/icon-512.png

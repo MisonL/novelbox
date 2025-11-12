@@ -27,13 +27,13 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "preserve",
-    "types": ["vite/client", "node"],
+    "types": ["vite/client", "@types/node"],
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "paths": {
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "src/**/*.mts", "src/**/*.cts"],
   "exclude": ["electron/dist", "dist", "dist-web", "node_modules", "release"]
 }
