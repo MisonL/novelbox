@@ -36,6 +36,7 @@
     "clean": "node scripts/clean.cjs",
     "type-check": "vue-tsc --noEmit",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts",
+    "test": "vitest run",
     "spec:check": "node scripts/spec-kit.cjs check",
     "spec:validate": "node scripts/spec-kit.cjs validate",
     "spec:test": "node scripts/spec-kit.cjs test",
