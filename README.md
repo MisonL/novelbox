@@ -1,4 +1,8 @@
+<div align="center">
+
 # NovelBox - 增强版AI小说创作工具
+
+</div>
 
 > **本项目基于 [Rain-31/novelbox](https://github.com/Rain-31/novelbox) 进行二次开发，在原项目基础上增加了大量新功能和优化**
 
@@ -270,75 +274,3 @@ novelbox/
 ## 许可证
 
 本项目基于原项目 [Rain-31/novelbox](https://github.com/Rain-31/novelbox) 的GPL-3.0许可证进行开源，并在此基础上进行了大量功能增强。
-
----
-
-<h2 id="english-version">English Documentation</h2>
-
-## Project Introduction
-
-NovelBox is an enhanced AI-assisted novel writing tool based on the original [Rain-31/novelbox](https://github.com/Rain-31/novelbox) project. This enhanced version adds significant new features including web deployment, multi-database support, additional AI models, and cross-platform compatibility.
-
-## Enhanced Features (Compared to Original)
-
-### 🚀 New Features Added
-- **Multi-Database Support**: MongoDB, MySQL, SQL Server, SQLite
-- **Web Application**: Complete web app with Docker support
-- **Cross-Platform**: Windows, macOS, Linux desktop apps
-- **Additional AI Models**: DeepSeek, MiniMax integration
-- **Modern UI**: Redesigned interface with better proportions
-- **DOCX Export**: Support for Microsoft Word format
-- **Real-time Statistics**: Live word count display
-
-### 📊 Comparison Table
-
-| Feature | Original | Enhanced |
-|---------|----------|----------|
-| **Database** | Local files only | 5 database types |
-| **Deployment** | Desktop only | Desktop + Web + Docker |
-| **AI Models** | 3 providers | 5 major providers |
-| **Export** | None | DOCX support |
-| **UI Design** | Basic | Modern |
-| **Cross-platform** | Windows only | Win/Mac/Linux |
-
-## Quick Start
-
-### Desktop Applications
-```bash
-# Clone the enhanced version
-git clone https://github.com/MisonL/novelbox.git
-cd novelbox
-
-# Install dependencies
-pnpm install
-
-# Build for your platform
-pnpm run build:win    # Windows
-pnpm run build:mac    # macOS
-pnpm run build:linux  # Linux
-```
-
-### Web Application
-```bash
-# Quick Docker deployment
-./deploy.sh
-
-# Or manual build
-pnpm run web:build
-```
-
-## System Requirements
-
-### Desktop Apps
-- **Windows**: Windows 10/11 64-bit
-- **macOS**: macOS 10.15+
-- **Linux**: Ubuntu 18.04+, CentOS 7+
-
-### Web App
-- **Browsers**: Chrome 80+, Firefox 75+, Safari 13+, Edge 80+
-- **Node.js**: 16.0+
-- **Docker**: 20.10+ (optional)
-
-## License
-
-This project is based on [Rain-31/novelbox](https://github.com/Rain-31/novelbox) under GPL-3.0 license, with significant enhancements and new features added.

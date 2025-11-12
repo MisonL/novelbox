@@ -23,14 +23,14 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     publicDir: 'public',
     root: '.',
     css: {
-      postcss: './config/postcss.web.config.cjs'
+      postcss: './postcss.web.config.cjs'
     },
     build: {
       outDir: 'dist-web',
       emptyOutDir: true,
       rollupOptions: {
         input: {
-          main: resolve(__dirname, '../index.web.html')
+          main: resolve(__dirname, '../index.html')
         },
         external: [
           'mongodb',
@@ -61,18 +61,63 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           'zlib'
         ],
         output: {
-          manualChunks: {
-            // Vue相关库
-            'vue-vendor': ['vue', 'vue-router'],
-            // UI组件库
-            'element-plus': ['element-plus', '@element-plus/icons-vue'],
-            // 编辑器相关
-            'editor': ['quill', 'quill-delta', '@vueup/vue-quill'],
-            // 工具库
-            'utils': ['uuid', 'diff-match-patch'],
-            // 文档处理
-            'docx': ['docx', 'html-to-text']
-          }
+          manualChunks: (id) => {
+            // 优化chunk分割策略 - 排除外部化模块
+            if (id.includes('node_modules') &&
+                !id.includes('mongodb') &&
+                !id.includes('mysql2') &&
+                !id.includes('mssql') &&
+                !id.includes('sqlite3')) {
+              // Vue核心库
+              if (id.includes('vue') || id.includes('vue-router')) {
+                return 'vue-vendor';
+              }
+              // Element Plus UI库
+              if (id.includes('element-plus') || id.includes('@element-plus')) {
+                return 'element-ui';
+              }
+              // 编辑器相关（Quill）
+              if (id.includes('quill') || id.includes('parchment') || id.includes('vue-quill')) {
+                return 'editor-core';
+              }
+              // 工具库
+              if (id.includes('uuid') || id.includes('diff-match-patch') || id.includes('fast-diff')) {
+                return 'utils';
+              }
+              // 文档处理
+              if (id.includes('docx') || id.includes('html-to-text')) {
+                return 'docx-lib';
+              }
+              // AI服务
+              if (id.includes('@vueuse')) {
+                return 'ai-service';
+              }
+              // 其他第三方库
+              return 'vendor-libs';
+            }
+            // 源码分离
+            if (id.includes('/src/')) {
+              if (id.includes('/views/')) {
+                return 'views';
+              }
+              if (id.includes('/components/')) {
+                return 'components';
+              }
+              if (id.includes('/services/')) {
+                return 'services';
+              }
+              if (id.includes('/utils/')) {
+                return 'utils-src';
+              }
+              return 'src-app';
+            }
+            // 其他情况返回 undefined
+            return undefined;
+          },
+          // 优化chunk文件名
+          chunkFileNames: 'assets/[name]-[hash].js',
+          entryFileNames: 'assets/[name]-[hash].js',
+          assetFileNames: 'assets/[name]-[hash].[ext]'
         }
       },
       assetsInlineLimit: 0,

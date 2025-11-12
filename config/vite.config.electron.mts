@@ -143,36 +143,36 @@ export default defineConfig({
   base: './',
   publicDir: 'public',
   css: {
-    postcss: './config/postcss.config.cjs'
+    postcss: './postcss.config.cjs'
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src'),
+      '@': resolve(__dirname, '../src'),
       // Node.js 内置模块的 polyfill 别名
-      'net': resolve(__dirname, 'src/stubs/net-stub.ts'),
-      'timers': resolve(__dirname, 'src/stubs/net-stub.ts'),
-      'timers/promises': resolve(__dirname, 'src/stubs/net-stub.ts'),
-      'fs': resolve(__dirname, 'src/stubs/net-stub.ts'),
-      'fs/promises': resolve(__dirname, 'src/stubs/net-stub.ts'),
-      'dgram': resolve(__dirname, 'src/stubs/net-stub.ts'),
-      'constants': resolve(__dirname, 'src/stubs/net-stub.ts'),
-      'crypto': resolve(__dirname, 'src/stubs/net-stub.ts'),
-      'stream': resolve(__dirname, 'src/stubs/net-stub.ts'),
-      'events': resolve(__dirname, 'src/stubs/net-stub.ts'),
-      'util': resolve(__dirname, 'src/stubs/net-stub.ts'),
-      'buffer': resolve(__dirname, 'src/stubs/net-stub.ts'),
-      'path': resolve(__dirname, 'src/stubs/net-stub.ts'),
-      'querystring': resolve(__dirname, 'src/stubs/net-stub.ts'),
-      'process': resolve(__dirname, 'src/stubs/net-stub.ts'),
+      'net': resolve(__dirname, '../src/stubs/net-stub.ts'),
+      'timers': resolve(__dirname, '../src/stubs/net-stub.ts'),
+      'timers/promises': resolve(__dirname, '../src/stubs/net-stub.ts'),
+      'fs': resolve(__dirname, '../src/stubs/net-stub.ts'),
+      'fs/promises': resolve(__dirname, '../src/stubs/net-stub.ts'),
+      'dgram': resolve(__dirname, '../src/stubs/net-stub.ts'),
+      'constants': resolve(__dirname, '../src/stubs/net-stub.ts'),
+      'crypto': resolve(__dirname, '../src/stubs/net-stub.ts'),
+      'stream': resolve(__dirname, '../src/stubs/net-stub.ts'),
+      'events': resolve(__dirname, '../src/stubs/net-stub.ts'),
+      'util': resolve(__dirname, '../src/stubs/net-stub.ts'),
+      'buffer': resolve(__dirname, '../src/stubs/net-stub.ts'),
+      'path': resolve(__dirname, '../src/stubs/net-stub.ts'),
+      'querystring': resolve(__dirname, '../src/stubs/net-stub.ts'),
+      'process': resolve(__dirname, '../src/stubs/net-stub.ts'),
       // 需要单独 stub 的模块
-      'child_process': resolve(__dirname, 'src/stubs/child_process-stub.ts'),
-      'os': resolve(__dirname, 'src/stubs/os-stub.ts'),
-      'tls': resolve(__dirname, 'src/stubs/tls-stub.ts'),
+      'child_process': resolve(__dirname, '../src/stubs/child_process-stub.ts'),
+      'os': resolve(__dirname, '../src/stubs/os-stub.ts'),
+      'tls': resolve(__dirname, '../src/stubs/tls-stub.ts'),
       // 其他可能需要的模块
-      'dns': resolve(__dirname, 'src/stubs/net-stub.ts'),
-      'zlib': resolve(__dirname, 'src/stubs/net-stub.ts'),
-      'url': resolve(__dirname, 'src/stubs/net-stub.ts'),
-      'sqlite3': resolve(__dirname, 'src/stubs/net-stub.ts')
+      'dns': resolve(__dirname, '../src/stubs/net-stub.ts'),
+      'zlib': resolve(__dirname, '../src/stubs/net-stub.ts'),
+      'url': resolve(__dirname, '../src/stubs/net-stub.ts'),
+      'sqlite3': resolve(__dirname, '../src/stubs/net-stub.ts')
     }
   },
   build: {
@@ -182,7 +182,7 @@ export default defineConfig({
     minify: 'terser',
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html')
+        main: resolve(__dirname, '../index.html')
       },
       external: [
         'electron',
@@ -282,6 +282,8 @@ export default defineConfig({
           if (id.includes('src/services') || id.includes('src/components')) {
             return 'app';
           }
+          // 其他情况返回 undefined
+          return undefined;
         }
       }
     },
